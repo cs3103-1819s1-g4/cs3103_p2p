@@ -8,7 +8,6 @@
 #define DEFAULT_SERVER_PORT "7777"
 
 using namespace std;
-void get_local_IP(IN_ADDR &IP);
 
 int main() {
 
