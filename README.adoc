@@ -1,0 +1,39 @@
+= CS3103_p2p
+
+== Protocol Design (Without NAT, with central tracker)
+
+=== Server Discovery
+
+The centralised server (tracker) will be running on UDP Port 80.
+
+It will contain a list, where each entry will be in the form _(filename, chunk_num, host)_. A host
+that does not have a chunk, but participates in the torrent/swarm, will have their _chunk_num_ value be _NULL_.
+
+Suppose Harry wants to download a file _test.txt_, he will send the server a _GET_ request. The tracker will update
+its list to include _(test.txt, NULL, Harry's IP)_, and respond to Harry a list of entries, where _filename_ is equal
+to _test.txt_.
+
+*[On Hold]* For every chunk Harry has successfully downloaded, he will send a request and the tracker will
+update its list to include _(test.txt, chunk_no, Harry's IP)_. The tracker will broadcast the new updated list to every peer,
+and every peer will update its respective peer list.
+
+Suppose Harry wants to exit from the swarm, he will send a request to tracker. Tracker deletes its entries and broadcast to
+every peer the new updated list.
+
+Suppose Harry wants to upload a *new* file, he will send the tracker the new file. *[On Hold]* The tracker will divide the file
+into chunks of fixed size, say 256 bytes, and update its list _(new_file, chunk_no, Harry's IP)_ accordingly.
+
+Any peer can query the tracker a list of files available or to query for a specified file.
+
+=== File Transfer
+
+Each P2P server will be running on TCP Port 6881.
+
+When Harry wants to download a file, he will obtain a peer list.
+
+At the start, he will simply choose a random chunk from a random peer to download.
+
+Next, he will choose which chunks he does not have yet and from these chunks, randomly download one from a random peer.
+
+There is a possibility that the chunk download from a peer will fail (eg. when the other peer exits). In this case, Harry
+will randomly choose another peer to download the same chunk.
