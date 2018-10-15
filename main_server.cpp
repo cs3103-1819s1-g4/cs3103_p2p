@@ -21,7 +21,7 @@ bool Main_Server::start(const char *port) {
 
     stop();
 
-    struct addrinfo *result = NULL, hints;
+    struct addrinfo *result = nullptr, hints;
     int status;
 
     ZeroMemory(&result, sizeof (result));
@@ -29,7 +29,7 @@ bool Main_Server::start(const char *port) {
     hints.ai_flags = AI_PASSIVE; // to allow binding
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_RAW;
-    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_protocol = IPPROTO_UDP;
 
     status = getaddrinfo("192.168.1.134", port, &hints, &result);
     if (status != 0) {
@@ -37,7 +37,7 @@ bool Main_Server::start(const char *port) {
         return false;
     }
 
-    SOCKET serv_sock = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
+    SOCKET serv_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (serv_sock == INVALID_SOCKET) {
         std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket." << std::endl;
         freeaddrinfo(result);
@@ -47,7 +47,7 @@ bool Main_Server::start(const char *port) {
     int on = 1;
     if( (setsockopt(serv_sock, IPPROTO_IP, IP_HDRINCL, (char *)&on, sizeof(on))) < 0 ) {
         perror("setsockopt");
-        return 1;
+        return false;
     }
 
     if (bind(serv_sock, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
@@ -71,10 +71,8 @@ bool Main_Server::start(const char *port) {
 Main_Server::~Main_Server() {
 
     stop();
-    if (online) {
+    if (online)
         WSACleanup();
-        online = false;
-    }
 }
 
 void Main_Server::stop() {
@@ -104,7 +102,7 @@ void Main_Server::get_local_IP(IN_ADDR &IP) {
             localhost_IP_addr_table = (MIB_IPADDRTABLE *) malloc(dwSize);
 
         }
-        if (localhost_IP_addr_table == NULL) {
+        if (localhost_IP_addr_table == nullptr) {
             perror("Memory allocation failed for GetIpAddrTable");
             exit(1);
         }
@@ -124,7 +122,7 @@ void Main_Server::get_local_IP(IN_ADDR &IP) {
     for (int i = 0; i < (int) localhost_IP_addr_table->dwNumEntries; i++) {
         IP.S_un.S_addr = (u_long) localhost_IP_addr_table->table[i].dwAddr;
         // compare to loopback address
-        if (strcmp(inet_ntoa(IP), "127.0.0.1")) {
+        if (strcmp(inet_ntoa(IP), "127.0.0.1") != 0) {
             break;
         }
     }
@@ -132,6 +130,6 @@ void Main_Server::get_local_IP(IN_ADDR &IP) {
     // table not needed anymore
     if(localhost_IP_addr_table) {
         free(localhost_IP_addr_table);
-        localhost_IP_addr_table = NULL;
+        localhost_IP_addr_table = nullptr;
     }
 }
