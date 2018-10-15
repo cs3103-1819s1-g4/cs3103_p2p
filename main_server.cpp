@@ -13,8 +13,8 @@ Main_Server::Main_Server() : sock(INVALID_SOCKET), online(false) {
     else
         online = true;
 
-    server_IP = new IN_ADDR();
-
+    ZeroMemory(&server_IP, sizeof(server_IP));
+    get_local_IP(server_IP);
 }
 
 bool Main_Server::start(const char *port) {
@@ -31,7 +31,7 @@ bool Main_Server::start(const char *port) {
     hints.ai_socktype = SOCK_RAW;
     hints.ai_protocol = IPPROTO_UDP;
 
-    status = getaddrinfo("192.168.1.134", port, &hints, &result);
+    status = getaddrinfo(inet_ntoa(server_IP), port, &hints, &result);
     if (status != 0) {
         std::cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << "." << std::endl;
         return false;
@@ -121,7 +121,7 @@ void Main_Server::get_local_IP(IN_ADDR &IP) {
 
     for (int i = 0; i < (int) localhost_IP_addr_table->dwNumEntries; i++) {
         IP.S_un.S_addr = (u_long) localhost_IP_addr_table->table[i].dwAddr;
-        // compare to loopback address
+        // if IP is not the loopback address
         if (strcmp(inet_ntoa(IP), "127.0.0.1") != 0) {
             break;
         }

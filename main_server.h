@@ -8,14 +8,12 @@
 #include <ipmib.h>
 #include <iphlpapi.h>
 
-int init_server(SOCKET &server_sock, IN_ADDR &server_IP);
-
 class Main_Server {
 
 private:
     bool online;
     SOCKET sock;
-    IN_ADDR *server_IP;
+    IN_ADDR server_IP;
     void get_local_IP(IN_ADDR &IP);
 public:
     Main_Server();
