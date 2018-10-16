@@ -100,3 +100,5 @@ Format: REQUEST
 ----
 Format: RESPONSE <Public IP address> <Public Port Number>
 ----
+
+image::https://i.imgur.com/psgg312.png[STUN implement]
