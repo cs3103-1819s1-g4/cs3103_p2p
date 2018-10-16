@@ -19,8 +19,8 @@ update its list to include _(test.txt, chunk_no, Harry's IP)_.
 Suppose Harry wants to exit from the swarm, he will inform the tracker and the tracker will delete the entries corresponding
 to Harry.
 
-Suppose Harry wants to upload a *new* file, he will send the tracker the new file. The tracker will divide the file
-into chunks of fixed size, say 2048 bytes, and update its list.
+Suppose Harry wants to upload a *new* file, Harry will divide the file
+into chunks of fixed size, say 2048 bytes, send it to tracker and tracker will update its list.
 
 Every 15 seconds, each peer will ask the tracker for the updated list, so that each peer knows which peer has which chunk
 and which peer has exited from the swarm.
@@ -38,7 +38,7 @@ FIELD VALUES (values from 1 to 7)
 . Download a file from the swarm. FILENAME and IP ADDRESS values must be filled.
 . Ask the tracker for the updated list (every 15 seconds). FILENAME must be filled.
 . Inform the tracker that a chunk has been successfully downloaded. FILENAME and CHUNK NO must be filled.
-. Upload a new file. FILENAME and IP ADDRESS must be filled.
+. Upload a new file. FILENAME, CHUNK NO and IP ADDRESS must be filled.
 . Exit from swarm. IP ADDRESS must be filled.
 . Query the tracker for a list of files available.
 . Query for a specified file. FILENAME must be filled.
