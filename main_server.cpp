@@ -1,15 +1,12 @@
-
 #include "main_server.h"
 
-#define MAX_CONNECTIONS 10
-
-Main_Server::Main_Server() : sock(INVALID_SOCKET), online(false) {
+MainServer::MainServer() : listen_sock(INVALID_SOCKET), online(false) {
 
     WSADATA wsock;
     int status = WSAStartup(MAKEWORD(2,2),&wsock);
 
     if ( status != 0)
-        std::cout << "[ERROR]: " << status << " Unable to start Winsock." << std::endl;
+        std::cout << "[ERROR]: " << status << " Unable to start Winsock.\n";
     else
         online = true;
 
@@ -17,7 +14,22 @@ Main_Server::Main_Server() : sock(INVALID_SOCKET), online(false) {
     get_local_IP(server_IP);
 }
 
-bool Main_Server::start(const char *port) {
+MainServer::~MainServer() {
+
+    stop();
+    if (online)
+        WSACleanup();
+}
+
+void MainServer::stop() {
+
+    if (listen_sock != INVALID_SOCKET) {
+        closesocket(listen_sock);
+        listen_sock = INVALID_SOCKET;
+    }
+}
+
+bool MainServer::start(const char *port) {
 
     stop();
 
@@ -33,13 +45,13 @@ bool Main_Server::start(const char *port) {
 
     status = getaddrinfo(inet_ntoa(server_IP), port, &hints, &result);
     if (status != 0) {
-        std::cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << "." << std::endl;
+        std::cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
         return false;
     }
 
     SOCKET serv_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (serv_sock == INVALID_SOCKET) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket." << std::endl;
+        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket.\n";
         freeaddrinfo(result);
         return false;
     }
@@ -51,85 +63,63 @@ bool Main_Server::start(const char *port) {
     }
 
     if (bind(serv_sock, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket." << std::endl;
+        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
         freeaddrinfo(result);
         closesocket(serv_sock);
         return false;
     }
 
-    // this is temporary, should be transferred to core_functions.cpp
-    struct sockaddr_in *addr;
-    addr = (struct sockaddr_in *)result->ai_addr;
-    std::cout << "P2P server running at IP address: " << inet_ntoa((struct in_addr)addr->sin_addr) << "\tport number: " << port << std::endl;
+    print_main_server((struct sockaddr_in *)result->ai_addr, port);
+    std::cout.flush();
 
     // We don't need this info any more
     freeaddrinfo(result);
-    sock = serv_sock;
+    listen_sock = serv_sock;
+
+    // start to receive from socket here using a thread
+    auto socket_recv_handle = (HANDLE)_beginthreadex(nullptr, 0, &socket_recv_thread, &listen_sock, 0, nullptr);
+    WaitForSingleObject(socket_recv_handle, INFINITE); // wait
+    CloseHandle(socket_recv_handle);
+
     return true;
 }
 
-Main_Server::~Main_Server() {
+unsigned int __stdcall socket_recv_thread(void *data) {
 
-    stop();
-    if (online)
+    auto recv_buffer = new RecvBuffer(PACKET_SIZE);
+    auto listen_sock = *(SOCKET *)data;
+    struct sockaddr_in client_addr{};
+    int status, sin_size = sizeof(client_addr);
+
+    // variables for socket listening descriptors
+    struct timeval time_listen_sock{};
+    fd_set read_fd_listen_sock;
+
+    ZeroMemory(&client_addr, sizeof(client_addr));
+    recv_socket_active = true;
+
+    //configure file descriptors and timeout
+    time_listen_sock.tv_sec = 3;
+    time_listen_sock.tv_usec = 0;
+    FD_ZERO(&read_fd_listen_sock);
+    FD_SET(listen_sock, &read_fd_listen_sock); // always look for connection attempts
+
+    if( (status = select(listen_sock + 1, &read_fd_listen_sock, nullptr, nullptr, &time_listen_sock)) == SOCKET_ERROR ) {
+        std::cout << "[ERROR]: " << WSAGetLastError() << " Select with socket failed\n";
+        closesocket(listen_sock);
         WSACleanup();
-}
-
-void Main_Server::stop() {
-
-    if (sock != INVALID_SOCKET) {
-        closesocket(sock);
-        sock = INVALID_SOCKET;
-    }
-}
-
-void Main_Server::get_local_IP(IN_ADDR &IP) {
-
-    /* Variables used by GetIpAddrTable */
-    PMIB_IPADDRTABLE localhost_IP_addr_table;
-    DWORD dwRetVal = 0, dwSize = 0;//32 bits data type
-
-    /* Variables used to return error message */
-    LPVOID lpMsgBuf;
-
-    localhost_IP_addr_table = (MIB_IPADDRTABLE *) malloc(sizeof(MIB_IPADDRTABLE));
-
-    if (localhost_IP_addr_table) {
-        // Make an initial call to GetIpAddrTable to get the
-        // necessary size into the dwSize variable
-        if (GetIpAddrTable(localhost_IP_addr_table, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER) {
-            free(localhost_IP_addr_table);
-            localhost_IP_addr_table = (MIB_IPADDRTABLE *) malloc(dwSize);
-
-        }
-        if (localhost_IP_addr_table == nullptr) {
-            perror("Memory allocation failed for GetIpAddrTable");
-            exit(1);
+        return 1;
+    } else if (status == 0) {
+        std::cout << "Time Limit expired at select\n";
+        closesocket(listen_sock);
+        WSACleanup();
+        return 1;
+    } else {
+        while(recv_socket_active) {
+            recv_socket_active = recv_buffer->produce(listen_sock, client_addr, sin_size);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep
         }
     }
-
-    if ((dwRetVal = GetIpAddrTable(localhost_IP_addr_table, &dwSize, 0)) != NO_ERROR) {
-        printf("GetIpAddrTable failed with error %d\n", dwRetVal);
-        if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                          NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),       // Default language
-                          (LPTSTR) &lpMsgBuf, 0, NULL)) {
-            printf("\tError: %s", lpMsgBuf);
-            LocalFree(lpMsgBuf);
-        }
-        exit(1);
-    }
-
-    for (int i = 0; i < (int) localhost_IP_addr_table->dwNumEntries; i++) {
-        IP.S_un.S_addr = (u_long) localhost_IP_addr_table->table[i].dwAddr;
-        // if IP is not the loopback address
-        if (strcmp(inet_ntoa(IP), "127.0.0.1") != 0) {
-            break;
-        }
-    }
-
-    // table not needed anymore
-    if(localhost_IP_addr_table) {
-        free(localhost_IP_addr_table);
-        localhost_IP_addr_table = nullptr;
-    }
+    recv_buffer->~RecvBuffer();
+    return 0;
 }

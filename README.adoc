@@ -59,6 +59,8 @@ Format: RESPONSE <SPECIFIED FILE>
 
 === Communication between p2p client and p2p server
 
+image::image/current.png[width="450"]
+
 Each P2P server will be running on TCP Port 6881.
 
 When Harry wants to download a file, he will obtain a list from tracker.
@@ -70,11 +72,10 @@ Next, he will choose which chunks he does not have yet and from these chunks, ra
 There is a possibility that the chunk download from a peer will fail (eg. when the other peer exits). In this case, Harry
 will (a) ask the tracker for the new updated list and (b) randomly choose **another** peer to download the same chunk.
 
+image::image/diagram.png[width="800"]
 == P2P behind NAT (STUN server implemenation)
 
-The STUN server will be running on UDP port 3478
-
-The server will handle the requests from P2P servers requesting for their Public IP address and Port number.
+The P2P servers will send a request from port 6881 to any Public STUN(RFC5389) server requesting for their Public IP address and Port number.
 
 === Changes to P2P
 
@@ -89,16 +90,4 @@ When a P2P Client wants to download specific chunk from a P2P Server, the P2P cl
 ==== Periodically check Public IP and Port number
 P2P server will periodically send a request to STUN server to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested Public IP and Port number, it will update the tracker by sending its new public IP and Port Number.
 
-==== STUN server request format
-
-----
-Format: REQUEST
-----
-
-==== STUN server response format
-
-----
-Format: RESPONSE <Public IP address> <Public Port Number>
-----
-
-image::https://i.imgur.com/psgg312.png[STUN implement]
+image::https://i.imgur.com/xnZcM9e.png[STUN implement]
