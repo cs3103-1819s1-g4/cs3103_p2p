@@ -120,5 +120,6 @@ unsigned int __stdcall socket_recv_thread(void *data) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep
         }
     }
+    recv_buffer->~RecvBuffer();
     return 0;
 }
