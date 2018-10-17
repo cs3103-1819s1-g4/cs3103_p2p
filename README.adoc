@@ -59,6 +59,8 @@ Format: RESPONSE <SPECIFIED FILE>
 
 === Communication between p2p client and p2p server
 
+image::image/current.png[width="450"]
+
 Each P2P server will be running on TCP Port 6881.
 
 When Harry wants to download a file, he will obtain a list from tracker.
@@ -70,6 +72,7 @@ Next, he will choose which chunks he does not have yet and from these chunks, ra
 There is a possibility that the chunk download from a peer will fail (eg. when the other peer exits). In this case, Harry
 will (a) ask the tracker for the new updated list and (b) randomly choose **another** peer to download the same chunk.
 
+image::image/diagram.png[width="800"]
 == P2P behind NAT (STUN server implemenation)
 
 The P2P servers will send a request from port 6881 to any Public STUN(RFC5389) server requesting for their Public IP address and Port number.
