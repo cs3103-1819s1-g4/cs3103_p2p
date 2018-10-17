@@ -1,20 +1,18 @@
 = CS3103_p2p
 
-== Protocol Design (Without NAT, with central tracker)
+== Protocol Design (With NAT, with central tracker)
 
 === Communication between tracker and p2p client
 
 The centralised server (tracker) will be running on UDP Port 80.
 
-It will contain a list, where each entry will be in the form _(filename, chunk_num, host)_. A host
-that does not have a chunk, but participates in the torrent/swarm, will have their _chunk_num_ value be _NULL_.
+It will contain a list, where each entry will be in the form _(filename, chunk_num, public_IP, port_num)_.
 
-Suppose Harry wants to download a file _test.txt_, he will send the server a request. The tracker will update
-its list to include _(test.txt, NULL, Harry's IP)_, and respond to Harry a list of entries, where _filename_ is equal
+Suppose Harry wants to download a file _test.txt_, he will send the tracker a request. The tracker will respond to Harry a list of entries, where _filename_ is equal
 to _test.txt_.
 
 For every chunk Harry has successfully downloaded, he will inform the tracker and the tracker will
-update its list to include _(test.txt, chunk_no, Harry's IP)_.
+update its list to include _(test.txt, chunk_no, Harry's Public_IP, port_num)_.
 
 Suppose Harry wants to exit from the swarm, he will inform the tracker and the tracker will delete the entries corresponding
 to Harry.
@@ -22,21 +20,18 @@ to Harry.
 Suppose Harry wants to upload a *new* file, Harry will divide the file
 into chunks of fixed size, say 2048 bytes, send it to tracker and tracker will update its list.
 
-Every 15 seconds, each peer will ask the tracker for the updated list, so that each peer knows which peer has which chunk
-and which peer has exited from the swarm.
-
 Any peer can query the tracker a list of files available or to query for a specified file.
 
 ==== Tracker request format
 
 ----
-Format: REQUEST <FIELD> [<FILENAME>] [<CHUNK NO>] [<IP ADDRESS>]
+Format: REQUEST <FLAG> [<FILENAME>] [<CHUNK NO>] [<IP ADDRESS>]
 ----
 
-FIELD VALUES (values from 1 to 7)
+FLAG VALUES (values from 1 to 7)
 
-. Download a file from the swarm. FILENAME and IP ADDRESS values must be filled.
-. Ask the tracker for the updated list (every 15 seconds). FILENAME must be filled.
+. Download a file from the swarm. FILENAME value must be filled.
+. Ask the tracker for the updated list. FILENAME must be filled.
 . Inform the tracker that a chunk has been successfully downloaded. FILENAME and CHUNK NO must be filled.
 . Upload a new file. FILENAME, CHUNK NO and IP ADDRESS must be filled.
 . Exit from swarm. IP ADDRESS must be filled.
@@ -59,8 +54,6 @@ Format: RESPONSE <SPECIFIED FILE>
 
 === Communication between p2p client and p2p server
 
-image::image/current.png[width="450"]
-
 Each P2P server will be running on TCP Port 6881.
 
 When Harry wants to download a file, he will obtain a list from tracker.
@@ -72,10 +65,13 @@ Next, he will choose which chunks he does not have yet and from these chunks, ra
 There is a possibility that the chunk download from a peer will fail (eg. when the other peer exits). In this case, Harry
 will (a) ask the tracker for the new updated list and (b) randomly choose **another** peer to download the same chunk.
 
+=== Examples
+image::image/current.png[width="450"]
 image::image/diagram.png[width="800"]
-== P2P behind NAT (STUN server implemenation)
 
-The P2P servers will send a request from port 6881 to any Public STUN(RFC5389) server requesting for their Public IP address and Port number.
+== P2P and Non-Symmetric NAT
+
+The P2P peers will send a request from port 6881 to any Public STUN (RFC5389) server requesting for their public IP addresses and port numbers.
 
 === Changes to P2P
 
@@ -90,4 +86,5 @@ When a P2P Client wants to download specific chunk from a P2P Server, the P2P cl
 ==== Periodically check Public IP and Port number
 P2P server will periodically send a request to STUN server to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested Public IP and Port number, it will update the tracker by sending its new public IP and Port Number.
 
+==== Example
 image::https://i.imgur.com/xnZcM9e.png[STUN implement]
