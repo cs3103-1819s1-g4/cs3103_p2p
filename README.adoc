@@ -72,9 +72,7 @@ will (a) ask the tracker for the new updated list and (b) randomly choose **anot
 
 == P2P behind NAT (STUN server implemenation)
 
-The STUN server will be running on UDP port 3478
-
-The server will handle the requests from P2P servers requesting for their Public IP address and Port number.
+The P2P servers will send a request from port 6881 to any Public STUN(RFC5389) server requesting for their Public IP address and Port number.
 
 === Changes to P2P
 
@@ -88,17 +86,5 @@ When a P2P Client wants to download specific chunk from a P2P Server, the P2P cl
 
 ==== Periodically check Public IP and Port number
 P2P server will periodically send a request to STUN server to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested Public IP and Port number, it will update the tracker by sending its new public IP and Port Number.
-
-==== STUN server request format
-
-----
-Format: REQUEST
-----
-
-==== STUN server response format
-
-----
-Format: RESPONSE <Public IP address> <Public Port Number>
-----
 
 image::https://i.imgur.com/xnZcM9e.png[STUN implement]
