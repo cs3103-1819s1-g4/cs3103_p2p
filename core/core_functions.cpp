@@ -16,7 +16,7 @@ bool RecvBuffer::produce(SOCKET sock, sockaddr_in client_addr, int sin_size) {
         WSACleanup();
         return false;
     }
-    std::cout << "Received a datagram packet from:" << inet_ntoa(client_addr.sin_addr) << "\t"
+    std::cout << "Received a datagram packet from:" << inet_ntoa(client_addr.sin_addr) << "\tport no: "
     << ntohs(client_addr.sin_port) << "\n";
 
     recv_buffer[bytes_recv] = '\0';

@@ -43,8 +43,8 @@ public:
         buffer_ = (char *)malloc(packet_size * Q_LEN);
         data_len = (int *)malloc(Q_LEN);
         recv_buffer = (char *)malloc(packet_size);
-        if(buffer_ == nullptr || recv_buffer == nullptr) {
-            std::cout << "[ERROR]: " << GetLastError() << "\tReceive at socket failed\n";
+        if(buffer_ == nullptr || recv_buffer == nullptr || data_len == nullptr) {
+            std::cout << "[ERROR]: " << GetLastError() << "\tFailed to allocate memory\n";
             WSACleanup();
         }
         next_in = 0;
@@ -55,6 +55,10 @@ public:
     ~RecvBuffer() {
         if(buffer_ != nullptr)
             free(buffer_);
+        if(data_len != nullptr)
+            free(data_len);
+        if(recv_buffer != nullptr)
+            free(data_len);
     };
 
     bool produce(SOCKET sock, sockaddr_in client_addr, int sin_size);
