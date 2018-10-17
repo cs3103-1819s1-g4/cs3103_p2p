@@ -69,3 +69,22 @@ Next, he will choose which chunks he does not have yet and from these chunks, ra
 
 There is a possibility that the chunk download from a peer will fail (eg. when the other peer exits). In this case, Harry
 will (a) ask the tracker for the new updated list and (b) randomly choose **another** peer to download the same chunk.
+
+== P2P behind NAT (STUN server implemenation)
+
+The P2P servers will send a request from port 6881 to any Public STUN(RFC5389) server requesting for their Public IP address and Port number.
+
+=== Changes to P2P
+
+==== Update and Inform Tracker of Public IP and Port number
+
+When the P2P server wants to update and inform the tracker of updated chunks, the P2P server will send a request to STUN server to get its Public IP and Port number and send the most recent Public IP and Port number to the tracker to update the file chunk directory list to include the P2P server Public IP address and Port number.
+
+==== Request to download specific chunk
+
+When a P2P Client wants to download specific chunk from a P2P Server, the P2P client will get the P2P server Public IP and Port number from the tracker and send the download request to the P2P server Public IP and Port number to download the chunk. If the P2P server port is unreachable for some reason (e.g. due to NAT mapping timeout), the client will inform the tracker to remove the chunk entries for that server IP and Port number.
+
+==== Periodically check Public IP and Port number
+P2P server will periodically send a request to STUN server to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested Public IP and Port number, it will update the tracker by sending its new public IP and Port Number.
+
+image::https://i.imgur.com/xnZcM9e.png[STUN implement]
