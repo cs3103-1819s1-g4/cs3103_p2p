@@ -101,4 +101,4 @@ Format: REQUEST
 Format: RESPONSE <Public IP address> <Public Port Number>
 ----
 
-image::https://i.imgur.com/psgg312.png[STUN implement]
+image::https://i.imgur.com/xnZcM9e.png[STUN implement]
