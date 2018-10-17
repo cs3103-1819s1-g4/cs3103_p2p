@@ -1,25 +1,27 @@
 #ifndef CS3103_P2P_MAIN_SERVER_H
 #define CS3103_P2P_MAIN_SERVER_H
 
-#include <iostream>
-#include <cstdio>
+#include <process.h>
 #include <WS2tcpip.h>
-#include <winsock2.h>
-#include <ipmib.h>
-#include <iphlpapi.h>
+#include <winsock.h>
 
-class Main_Server {
+#include "core/core_functions.h"
+
+extern bool recv_socket_active;
+
+class MainServer {
 
 private:
     bool online;
-    SOCKET sock;
+    SOCKET listen_sock;
     IN_ADDR server_IP;
-    void get_local_IP(IN_ADDR &IP);
 public:
-    Main_Server();
-    ~Main_Server();
+    MainServer();
+    ~MainServer();
     bool start(const char *port);
     void stop();
 };
+
+unsigned int __stdcall socket_recv_thread(void *data);
 
 #endif //CS3103_P2P_MAIN_SERVER_H

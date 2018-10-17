@@ -5,13 +5,17 @@
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
 
-#define DEFAULT_SERVER_PORT "7777"
+#define DEFAULT_SERVER_PORT "80"
 
 using namespace std;
 
+bool recv_socket_active;
+const unsigned int Q_LEN = 100;
+const unsigned int PACKET_SIZE = 2048;
+
 int main() {
 
-    auto *main_server = new Main_Server();
+    auto main_server = new MainServer();
 
     if (!main_server->start(DEFAULT_SERVER_PORT))
        return 1;
@@ -19,6 +23,6 @@ int main() {
 
     }
 
-    main_server->~Main_Server();
+    main_server->~MainServer();
     return 0;
 }
