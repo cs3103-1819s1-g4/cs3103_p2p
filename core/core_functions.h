@@ -15,13 +15,12 @@
 extern const unsigned int Q_LEN;
 extern const unsigned int PACKET_SIZE;
 
-void get_local_IP(IN_ADDR &IP);
+void get_private_IP(IN_ADDR &IP);
 void print_main_server(struct sockaddr_in *addr, std::string port);
 
 /**
  * Consumer producer queue of char buffers of packet_size for concurrent purposes
  */
-
 class RecvBuffer {
 private:
     std::mutex mu;
@@ -61,8 +60,8 @@ public:
             free(data_len);
     };
 
-    bool produce(SOCKET sock, sockaddr_in client_addr, int sin_size);
-    void consume(char *buffer);
+    bool producer(SOCKET sock, sockaddr_in client_addr, int sin_size);
+    void consumer(char *buffer);
 };
 
 #endif //CS3103_P2P_CORE_FUNCTIONS_H

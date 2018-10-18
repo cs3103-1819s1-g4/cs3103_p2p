@@ -1,6 +1,13 @@
 #include "core_functions.h"
 
-bool RecvBuffer::produce(SOCKET sock, sockaddr_in client_addr, int sin_size) {
+/**
+ * Producer function of consumer producer queue of buffers.
+ * Each time a datagram is received. It is stored in the queue at idx 'next_in'.
+ * @param sock
+ * @param client_addr
+ * @param sin_size
+ */
+bool RecvBuffer::producer(SOCKET sock, sockaddr_in client_addr, int sin_size) {
 
     std::unique_lock<std::mutex> locker(mu); // lock mutex
 
@@ -31,7 +38,13 @@ bool RecvBuffer::produce(SOCKET sock, sockaddr_in client_addr, int sin_size) {
     return true;
 }
 
-void RecvBuffer::consume(char *b) {
+/**
+ * Consumer function of consumer producer queue of buffers.
+ * Each time a datagram is loaded into the queue by the producer, processor threads can
+ * use this function to load the datagram to their own buffer specified at param.
+ * @param b
+ */
+void RecvBuffer::consumer(char *b) {
 
     std::unique_lock<std::mutex> locker(mu); // lock mutex
 
@@ -47,10 +60,11 @@ void RecvBuffer::consume(char *b) {
 }
 
 /**
- * This functions returns the one of the private IP address of the local machine
+ * This functions returns the one of the private IP address assigned by local DHCP.
+ * Can be edited find all the private IPs of the machine.
  * @param IP
  */
-void get_local_IP(IN_ADDR &IP) {
+void get_private_IP(IN_ADDR &IP) {
 
     /* Variables used by GetIpAddrTable */
     PMIB_IPADDRTABLE localhost_IP_addr_table;

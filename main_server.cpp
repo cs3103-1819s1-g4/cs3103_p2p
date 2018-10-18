@@ -11,7 +11,7 @@ MainServer::MainServer() : listen_sock(INVALID_SOCKET), online(false) {
         online = true;
 
     ZeroMemory(&server_IP, sizeof(server_IP));
-    get_local_IP(server_IP);
+    get_private_IP(server_IP);
 }
 
 MainServer::~MainServer() {
@@ -116,7 +116,7 @@ unsigned int __stdcall socket_recv_thread(void *data) {
         return 1;
     } else {
         while(recv_socket_active) {
-            recv_socket_active = recv_buffer->produce(listen_sock, client_addr, sin_size);
+            recv_socket_active = recv_buffer->producer(listen_sock, client_addr, sin_size);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep
         }
     }
