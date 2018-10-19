@@ -1,25 +1,10 @@
 #include "main_server.h"
 
-MainServer::MainServer() : listen_sock(INVALID_SOCKET), online(false) {
+RecvBuffer recv_buffer;
 
-    WSADATA wsock;
-    int status = WSAStartup(MAKEWORD(2,2),&wsock);
 
-    if ( status != 0)
-        std::cout << "[ERROR]: " << status << " Unable to start Winsock.\n";
-    else
-        online = true;
 
-    ZeroMemory(&server_IP, sizeof(server_IP));
-    get_private_IP(server_IP);
-}
 
-MainServer::~MainServer() {
-
-    stop();
-    if (online)
-        WSACleanup();
-}
 
 void MainServer::stop() {
 
@@ -33,7 +18,7 @@ bool MainServer::start(const char *port) {
 
     stop();
 
-    struct addrinfo *result = nullptr, hints;
+    struct addrinfo *result = nullptr, hints{};
     int status;
 
     ZeroMemory(&result, sizeof (result));
@@ -86,17 +71,16 @@ bool MainServer::start(const char *port) {
 
 unsigned int __stdcall socket_recv_thread(void *data) {
 
-    auto recv_buffer = new RecvBuffer(PACKET_SIZE);
     auto listen_sock = *(SOCKET *)data;
     struct sockaddr_in client_addr{};
     int status, sin_size = sizeof(client_addr);
 
+    ZeroMemory(&client_addr, sizeof(client_addr));
+    recv_socket_active = true;
+
     // variables for socket listening descriptors
     struct timeval time_listen_sock{};
     fd_set read_fd_listen_sock;
-
-    ZeroMemory(&client_addr, sizeof(client_addr));
-    recv_socket_active = true;
 
     //configure file descriptors and timeout
     time_listen_sock.tv_sec = 3;
@@ -116,10 +100,9 @@ unsigned int __stdcall socket_recv_thread(void *data) {
         return 1;
     } else {
         while(recv_socket_active) {
-            recv_socket_active = recv_buffer->producer(listen_sock, client_addr, sin_size);
+            recv_socket_active = recv_buffer.producer(listen_sock, client_addr, sin_size);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep
         }
     }
-    recv_buffer->~RecvBuffer();
     return 0;
 }

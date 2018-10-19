@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include "main_server.h"
+#include "core/core_functions.h"
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -22,7 +23,7 @@ int main() {
     else {
 
     }
-
     main_server->~MainServer();
+    std::cout << "Goodbye!";
     return 0;
 }
