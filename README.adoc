@@ -84,7 +84,21 @@ The P2P will contact the STUN server in the following scenarios:
 When the P2P wants to download and upload a file, the P2P will send a request to the STUN server for its Public IP and Port number after that it will proceed to download and upload the file and update the tracker.
 
 ==== Periodically check Public IP and Port number
-P2P server will periodically send a request to STUN server to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested and saved Public IP and Port number, it will update the tracker by sending its new public IP and Port Number.
+P2P server will periodically send a request to STUN server at a 10 second interval to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested and saved Public IP and Port number, it will update the tracker by sending its new public IP and Port Number.
 
 ==== Example
 image::https://i.imgur.com/xnZcM9e.png[STUN implement]
+
+== Storage Chunking
+
+We will use a 2 byte header for each chunk to differentiate the chunks when reading and writing chunks into storage.
+
+The 1st byte will be the last chunk flag. 1 for last chunk, 0 otherwise. 
+
+The 2nd byte will be the chunk number.
+
+The extensions of the file will differentiate a partially downloaded file from a fully downloaded file.
+
+==== Example
+
+image::https://i.imgur.com/vdLktHr.png[Storage implement]
