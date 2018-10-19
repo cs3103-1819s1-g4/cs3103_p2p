@@ -1,5 +1,4 @@
 #include "core_functions.h"
-
 /**
  * Producer function of consumer producer queue of buffers.
  * Each time a datagram is received. It is stored in the queue at idx 'next_in'.
@@ -92,8 +91,8 @@ void get_private_IP(IN_ADDR &IP) {
     if ((dwRetVal = GetIpAddrTable(localhost_IP_addr_table, &dwSize, 0)) != NO_ERROR) {
         printf("GetIpAddrTable failed with error %d\n", dwRetVal);
         if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                          NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),       // Default language
-                          (LPTSTR) &lpMsgBuf, 0, NULL)) {
+                          nullptr, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),       // Default language
+                          (LPTSTR) &lpMsgBuf, 0, nullptr)) {
             printf("\tError: %s\n", lpMsgBuf);
             LocalFree(lpMsgBuf);
         }
@@ -112,7 +111,6 @@ void get_private_IP(IN_ADDR &IP) {
     // table not needed anymore
     if(localhost_IP_addr_table) {
         free(localhost_IP_addr_table);
-        localhost_IP_addr_table = nullptr;
     }
 }
 
