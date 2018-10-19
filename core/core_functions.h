@@ -13,15 +13,13 @@
 #include <string>
 
 extern const unsigned int Q_LEN;
-extern const unsigned int PACKET_SIZE;
 
-void get_local_IP(IN_ADDR &IP);
+void get_private_IP(IN_ADDR &IP);
 void print_main_server(struct sockaddr_in *addr, std::string port);
 
 /**
  * Consumer producer queue of char buffers of packet_size for concurrent purposes
  */
-
 class RecvBuffer {
 private:
     std::mutex mu;
@@ -35,10 +33,10 @@ private:
     int packet_size_;
 public:
     /**
-     * Constructor for receving buffer, 'MAX_SIZE of packet_size' sized buffer
+     * init for receiving buffer, 'MAX_SIZE of packet_size' sized buffer
      * @param packet_size
      */
-    explicit RecvBuffer(const unsigned int packet_size) {
+    void init_RecvBuffer(const unsigned int packet_size) {
         packet_size_ = packet_size;
         buffer_ = (char *)malloc(packet_size * Q_LEN);
         data_len = (int *)malloc(Q_LEN);
@@ -58,11 +56,11 @@ public:
         if(data_len != nullptr)
             free(data_len);
         if(recv_buffer != nullptr)
-            free(data_len);
+            free(recv_buffer);
     };
 
-    bool produce(SOCKET sock, sockaddr_in client_addr, int sin_size);
-    void consume(char *buffer);
+    bool producer(SOCKET sock, sockaddr_in client_addr, int sin_size);
+    void consumer(char *buffer);
 };
 
 #endif //CS3103_P2P_CORE_FUNCTIONS_H
