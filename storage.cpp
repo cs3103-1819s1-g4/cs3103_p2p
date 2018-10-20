@@ -133,7 +133,6 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename){
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
     std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
 
-
     char readChunkContent[fixedChunkContentSize];
     char readChunkHeader[fixedChunkHeaderSize];
     std::ifstream is(pathToFileOfDownloading);
@@ -146,11 +145,9 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename){
         // int chunkNumber = parseInt32(readChunkHeader);
         fileSize += chunkContentSize;
         count++;
-
     }
-            std::cout<<count;
-    std::cout<<"\n";
-
+    // std::cout<<count;
+    // std::cout<<"\n";
     is.close();
 
     std::ofstream outfile;
@@ -227,7 +224,25 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
 
     } else if(doesFileExist(pathToFileOfDownloading)) {
         // get from incomplete file
-
+        char readChunk[fixedChunkSizeWithHeader];
+        char readChunkContent[fixedChunkContentSize];
+        char readChunkHeader[fixedChunkHeaderSize];
+        std::ifstream is(pathToFileOfDownloading);
+        while (is.peek() != std::ifstream::traits_type::eof()){ // loop and search
+            is.read(readChunkHeader,fixedChunkHeaderSize);
+            int chunkContentSize = parseInt32(readChunkHeader+4);
+            is.read(readChunkContent,chunkContentSize);
+            int savedChunkNumber = parseInt32(readChunkHeader);
+            if(chunkNumber == savedChunkNumber){
+                *chunkTotalByteSize = chunkContentSize + fixedChunkHeaderSize;                
+                memcpy(readChunk, readChunkHeader, fixedChunkHeaderSize);
+                memcpy(readChunk+fixedChunkHeaderSize, readChunkContent, chunkContentSize);
+                memcpy(ptrToFillWithChunkData, readChunk, fixedChunkSizeWithHeader);
+                is.close();
+                return 1;
+            }
+        }
+        is.close();
 
     }
 
@@ -265,9 +280,9 @@ int main()
         //std::cout<<"\n";
         int i = rand() % 1110 + 1;
         //std::cout<<i;
-        int work = stor->getChunk(temp,"test.png",i, chunkSizeRecieved);
+        int work = stor->getChunk(temp,"test.out",i, chunkSizeRecieved);
         if(work != -1){
-            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test.out");
+            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test2.out");
         }
         c++;
     }
