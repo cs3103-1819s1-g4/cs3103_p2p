@@ -6,12 +6,14 @@
 
 class Storage
 {
-    int fixedChunkSize;
+    int fixedChunkContentSize;
     int fixedChunkSizeWithHeader;
+    int fixedChunkHeaderSize;
     std::string pathToDownloadFolder;
     bool doesFileExist (const std::string& name);
     void serializeInt32(char * buf, int32_t val);
     int32_t parseInt32(char * buf);
+    void Storage::sortAndUpdateFullyDownloadedFile(std::string filename);
 
   public:
     Storage(int fixedChunkSize, std::string pathToDownloadFolder);
