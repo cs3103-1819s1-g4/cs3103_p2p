@@ -13,7 +13,7 @@ class Storage
     bool doesFileExist (const std::string& name);
     void serializeInt32(char * buf, int32_t val);
     int32_t parseInt32(char * buf);
-    void Storage::sortAndUpdateFullyDownloadedFile(std::string filename);
+    void sortAndUpdateFullyDownloadedFile(std::string filename);
 
   public:
     Storage(int fixedChunkSize, std::string pathToDownloadFolder);
