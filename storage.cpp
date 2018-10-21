@@ -4,35 +4,6 @@
 #include <sys/types.h> 
 #include <unistd.h>
 
-Chunk::Chunk(void *ptrToChunkData, size_t size, size_t count, std::string filename){
-    chunkHeader = completeChunk;
-    this->filename = filename;
-    completeChunkSize = (size*count) / sizeof(char);
-    memcmp(completeChunk, ptrToChunkData, completeChunkSize);
-    chunkContent = completeChunk + chunkHeaderSize;
-    chunkContentSize = parseInt32(chunkHeader + 4);
-    chunkNumber = parseInt32(chunkHeader);
-    finalFlag = chunkHeader[8];
-}
-
-Chunk::Chunk(void *ptrToChunkContent, size_t contentSize, size_t contentCount, int chunkNumber, bool finalFlag, std::string filename){
-    chunkHeader = completeChunk;
-    serializeInt32(chunkHeader, chunkNumber);
-    this->chunkNumber = chunkNumber;
-    this->filename = filename;
-    chunkContentSize = (contentSize*contentCount) / sizeof(char);
-    serializeInt32(chunkHeader + 4, chunkContentSize);
-    chunkHeader[8] = finalFlag;
-    completeChunkSize = chunkHeaderSize + chunkContentSize;
-    chunkContent = completeChunk + chunkHeaderSize;
-    memcmp(chunkContent, ptrToChunkContent, chunkContentSize);
-}
-
-int Chunk::getCompleteChunkSize(){return completeChunkSize;}
-int Chunk::getChunkNumber(){return chunkNumber;}
-int Chunk::getChunkContentSize(){return chunkContentSize;}
-bool Chunk::isFinalChunk(){return finalFlag;} 
-
 Storage::Storage(std::string pathToDownloadFolder)
 {
     this->pathToDownloadFolder = pathToDownloadFolder;
