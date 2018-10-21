@@ -4,14 +4,9 @@
 #include <sys/types.h> 
 #include <unistd.h>
 
-Storage::Storage(int fixedChunkContentSize, std::string pathToDownloadFolder)
+Storage::Storage(std::string pathToDownloadFolder)
 {
-    this->fixedChunkContentSize = fixedChunkContentSize;
-    // first 4 bytes for chunk number, 4 bytes for chunk content length, 1 byte for final flag
-    this->fixedChunkHeaderSize = 9;
-    this->fixedChunkSizeWithHeader = fixedChunkContentSize + this->fixedChunkHeaderSize;
     this->pathToDownloadFolder = pathToDownloadFolder;
-
     // create download directory
     if(!doesFileExist(pathToDownloadFolder)){
         // TODO CHANGE TO WINDOWS
@@ -22,7 +17,6 @@ Storage::Storage(int fixedChunkContentSize, std::string pathToDownloadFolder)
         }
     }
 }
-
 
 int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::string filename)
 {
@@ -182,29 +176,24 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
         return -1;
     }
 
-
     if(doesFileExist(pathToFileCompleted)){
         // get from completed file
         std::ifstream is(pathToFileCompleted);
         char readChunk[fixedChunkSizeWithHeader];
         char readChunkContent[fixedChunkContentSize];
         char readChunkHeader[fixedChunkHeaderSize];
-
         int count = 1;
-
         while (is.peek() != std::ifstream::traits_type::eof()){ // loop getting chunk
             is.read(readChunkContent,fixedChunkContentSize);
             // set chunk number
             serializeInt32(readChunkHeader, count);
-
             //set chunk content size
             int chunkContentSize = is.gcount();
             serializeInt32(readChunkHeader+4, chunkContentSize);
-
             // set final flag
             readChunkHeader[8] = false;
             if(count == chunkNumber){
-
+                is.peek();
                 if(is.eof()){
                     readChunkHeader[8] = true;
                 }
@@ -249,12 +238,12 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
     return 1;
 }
 
-void Storage::serializeInt32(char * buf, int32_t val)
+void serializeInt32(char * buf, int32_t val)
 {
     memcpy(buf, &val, 4);
 }
 
-int32_t Storage::parseInt32(char * buf)
+int32_t parseInt32(char * buf)
 {
     int32_t val;
     memcpy(&val, buf, 4);
@@ -268,29 +257,17 @@ bool Storage::doesFileExist (const std::string& name) {
 
 int main()
 {
-    Storage *stor = new Storage(1024, "./test");
-    char temp[2048];
-    // char t2[] = "lol";
-    //int i;
+    Storage *stor = new Storage("./test");
+    char temp[2058];
     size_t totalChunkSize;
     size_t * chunkSizeRecieved = &totalChunkSize;
-    int c = 1;
     while(1){
-        //usleep(10000);
-        //std::cout<<"\n";
-        int i = rand() % 1110 + 1;
-        //std::cout<<i;
-        int work = stor->getChunk(temp,"test.out",i, chunkSizeRecieved);
+        int i = rand() % 2000 + 1; // random test for file size less than 2000 * chunk content size
+        int work = stor->getChunk(temp,"test.png",i, chunkSizeRecieved);
         if(work != -1){
-            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test2.out");
+            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test7.out");
         }
-        c++;
     }
-        //     std::cout<<"\nok\n";
-
-        // stor->getChunk(temp,"test.t",2, chunkSizeRecieved);
-        // stor->saveChunk(temp, sizeof(char), totalChunkSize, "testTO.t");
-    
 
     return 0;
 }
