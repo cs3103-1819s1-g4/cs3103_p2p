@@ -102,11 +102,10 @@ private:
     uint8_t list_len;
     vector<T> entry_list;
 public:
-    P2P_response_pkt* create_P2P_response_pkt(uint8_t list_len, vector<T> list) {
+    P2P_response_pkt create_P2P_response_pkt(uint8_t list_len, vector<T> list) {
         assert(list_len > 0);
 
-        P2P_response_pkt *packet_to_return = nullptr;
-        packet_to_return = (P2P_response_pkt *)malloc(sizeof(P2P_response_pkt));
+        P2P_response_pkt packet_to_return;
 
         strcpy_s(packet_to_return->type, RESPONSE_TYPE_FIELD_LEN, RESPONSE_TYPE_FIELD);
         packet_to_return->list_len = list_len;
