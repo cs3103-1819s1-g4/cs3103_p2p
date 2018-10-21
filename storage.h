@@ -16,10 +16,12 @@ class Storage
     void sortAndUpdateFullyDownloadedFile(std::string filename);
 
   public:
-    Storage(int fixedChunkSize, std::string pathToDownloadFolder);
+
+    // pathToDownloadFolder - string of path to download folder e.g "./download"
+    Storage(std::string pathToDownloadFolder);
 
     /**
-     * Save chunk to storage
+     * Save chunk to storage chunk chunk max size should be 2048+10
      * ptrToChunkData - Chunk to be saved to storage
      * size - Size in bytes of each element to be written.
      * count - Number of elements, each one with a size of size bytes.
