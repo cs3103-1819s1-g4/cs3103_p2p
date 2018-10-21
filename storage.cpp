@@ -6,12 +6,7 @@
 
 Storage::Storage(std::string pathToDownloadFolder)
 {
-    this->fixedChunkContentSize = 2048;
-    // first 4 bytes for chunk number, 4 bytes for chunk content length, 1 byte for final flag, 1 extra
-    this->fixedChunkHeaderSize = 10;
-    this->fixedChunkSizeWithHeader = fixedChunkContentSize + this->fixedChunkHeaderSize;
     this->pathToDownloadFolder = pathToDownloadFolder;
-
     // create download directory
     if(!doesFileExist(pathToDownloadFolder)){
         // TODO CHANGE TO WINDOWS
@@ -22,6 +17,25 @@ Storage::Storage(std::string pathToDownloadFolder)
         }
     }
 }
+
+Chunk::Chunk(void *ptrToChunkData, size_t size, size_t count, std::string filename){
+    chunkHeader = completeChunk;
+    this->filename = filename;
+    completeChunkSize = (size*count) / sizeof(char);
+    memcmp(completeChunk, ptrToChunkData, completeChunkSize);
+    chunkContent = completeChunk + chunkHeaderSize;
+    chunkContentSize = parseInt32(chunkHeader + 4);
+}
+
+Chunk::Chunk(void *ptrToChunkContent, size_t contentSize, size_t contentCount, int chunkNumber, int finalFlag, std::string filename){
+    chunkHeader = completeChunk;
+    this->filename = filename;
+    chunkContentSize = (contentSize*contentCount) / sizeof(char);
+    completeChunkSize = chunkHeaderSize + chunkContentSize;
+    chunkContent = completeChunk + chunkHeaderSize;
+    memcmp(chunkContent, ptrToChunkContent, chunkContentSize);
+}
+
 
 
 int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::string filename)
@@ -249,12 +263,12 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
     return 1;
 }
 
-void Storage::serializeInt32(char * buf, int32_t val)
+void serializeInt32(char * buf, int32_t val)
 {
     memcpy(buf, &val, 4);
 }
 
-int32_t Storage::parseInt32(char * buf)
+int32_t parseInt32(char * buf)
 {
     int32_t val;
     memcpy(&val, buf, 4);
