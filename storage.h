@@ -54,6 +54,8 @@ class Chunk{
 
     int completeChunkSize;
     int chunkContentSize;
+    int chunkNumber;
+    bool finalFlag;
 
   public:
 
@@ -66,11 +68,9 @@ class Chunk{
      */
     Chunk(void *ptrToChunkData, size_t size, size_t count, std::string filename);
 
-    Chunk(void *ptrToChunkContent, size_t contentSize, size_t contentCount, int chunkNumber, int finalFlag, std::string filename);
+    Chunk(void *ptrToChunkContent, size_t contentSize, size_t contentCount, int chunkNumber, bool finalFlag, std::string filename);
 
     int getCompleteChunkSize();
-    int getChunkHeaderSize();
-
     int getChunkNumber();
     int getChunkContentSize();
     bool isFinalChunk(); 

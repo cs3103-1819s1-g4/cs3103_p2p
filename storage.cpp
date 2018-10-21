@@ -4,6 +4,35 @@
 #include <sys/types.h> 
 #include <unistd.h>
 
+Chunk::Chunk(void *ptrToChunkData, size_t size, size_t count, std::string filename){
+    chunkHeader = completeChunk;
+    this->filename = filename;
+    completeChunkSize = (size*count) / sizeof(char);
+    memcmp(completeChunk, ptrToChunkData, completeChunkSize);
+    chunkContent = completeChunk + chunkHeaderSize;
+    chunkContentSize = parseInt32(chunkHeader + 4);
+    chunkNumber = parseInt32(chunkHeader);
+    finalFlag = chunkHeader[8];
+}
+
+Chunk::Chunk(void *ptrToChunkContent, size_t contentSize, size_t contentCount, int chunkNumber, bool finalFlag, std::string filename){
+    chunkHeader = completeChunk;
+    serializeInt32(chunkHeader, chunkNumber);
+    this->chunkNumber = chunkNumber;
+    this->filename = filename;
+    chunkContentSize = (contentSize*contentCount) / sizeof(char);
+    serializeInt32(chunkHeader + 4, chunkContentSize);
+    chunkHeader[8] = finalFlag;
+    completeChunkSize = chunkHeaderSize + chunkContentSize;
+    chunkContent = completeChunk + chunkHeaderSize;
+    memcmp(chunkContent, ptrToChunkContent, chunkContentSize);
+}
+
+int Chunk::getCompleteChunkSize(){return completeChunkSize;}
+int Chunk::getChunkNumber(){return chunkNumber;}
+int Chunk::getChunkContentSize(){return chunkContentSize;}
+bool Chunk::isFinalChunk(){return finalFlag;} 
+
 Storage::Storage(std::string pathToDownloadFolder)
 {
     this->pathToDownloadFolder = pathToDownloadFolder;
@@ -17,26 +46,6 @@ Storage::Storage(std::string pathToDownloadFolder)
         }
     }
 }
-
-Chunk::Chunk(void *ptrToChunkData, size_t size, size_t count, std::string filename){
-    chunkHeader = completeChunk;
-    this->filename = filename;
-    completeChunkSize = (size*count) / sizeof(char);
-    memcmp(completeChunk, ptrToChunkData, completeChunkSize);
-    chunkContent = completeChunk + chunkHeaderSize;
-    chunkContentSize = parseInt32(chunkHeader + 4);
-}
-
-Chunk::Chunk(void *ptrToChunkContent, size_t contentSize, size_t contentCount, int chunkNumber, int finalFlag, std::string filename){
-    chunkHeader = completeChunk;
-    this->filename = filename;
-    chunkContentSize = (contentSize*contentCount) / sizeof(char);
-    completeChunkSize = chunkHeaderSize + chunkContentSize;
-    chunkContent = completeChunk + chunkHeaderSize;
-    memcmp(chunkContent, ptrToChunkContent, chunkContentSize);
-}
-
-
 
 int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::string filename)
 {
@@ -196,25 +205,20 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
         return -1;
     }
 
-
     if(doesFileExist(pathToFileCompleted)){
         // get from completed file
         std::ifstream is(pathToFileCompleted);
         char readChunk[fixedChunkSizeWithHeader];
         char readChunkContent[fixedChunkContentSize];
         char readChunkHeader[fixedChunkHeaderSize];
-
         int count = 1;
-
         while (is.peek() != std::ifstream::traits_type::eof()){ // loop getting chunk
             is.read(readChunkContent,fixedChunkContentSize);
             // set chunk number
             serializeInt32(readChunkHeader, count);
-
             //set chunk content size
             int chunkContentSize = is.gcount();
             serializeInt32(readChunkHeader+4, chunkContentSize);
-
             // set final flag
             readChunkHeader[8] = false;
             if(count == chunkNumber){
