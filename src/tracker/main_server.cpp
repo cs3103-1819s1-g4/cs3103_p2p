@@ -2,10 +2,6 @@
 
 RecvBuffer recv_buffer;
 
-
-
-
-
 void MainServer::stop() {
 
     if (listen_sock != INVALID_SOCKET) {

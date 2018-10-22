@@ -1,12 +1,12 @@
 #include <iostream>
 #include <cstdio>
 #include "main_server.h"
-#include "core/core_functions.h"
+#include "../core/core_functions.h"
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
 
-#define DEFAULT_SERVER_PORT "80"
+#define DEFAULT_TRACKER_PORT "80"
 
 using namespace std;
 
@@ -18,7 +18,7 @@ int main() {
 
     auto main_server = new MainServer();
 
-    if (!main_server->start(DEFAULT_SERVER_PORT))
+    if (!main_server->start(DEFAULT_TRACKER_PORT))
        return 1;
     else {
 

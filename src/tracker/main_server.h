@@ -5,7 +5,7 @@
 #include <WS2tcpip.h>
 #include <winsock.h>
 
-#include "core/core_functions.h"
+#include "../core/core_functions.h"
 
 /**
  * global receive buffer within the scope of the main server for receiving datagram and passing data

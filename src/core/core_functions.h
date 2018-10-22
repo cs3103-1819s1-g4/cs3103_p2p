@@ -1,7 +1,7 @@
 #ifndef CS3103_P2P_CORE_FUNCTIONS_H
 #define CS3103_P2P_CORE_FUNCTIONS_H
 
-#include <winsock2.h>
+#include <WinSock2.h>
 #include <ipmib.h>
 #include <iphlpapi.h>
 #include <assert.h>
