@@ -32,7 +32,6 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
 
     //if file does not exist create new .p2pdownloading file
     if (!doesFileExist(pathToFileOfDownloading)) {
-        // TODO CHANGE TO WINDOWS
         std::ofstream outfile(pathToFileOfDownloading);
         outfile.close();
     }
@@ -129,7 +128,6 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename) {
     char readChunkContent[fixedChunkContentSize];
     char readChunkHeader[fixedChunkHeaderSize];
     std::ifstream is(pathToFileOfDownloading, std::ios::binary);
-    int count = 1;
     int fileSize = 0;
     while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
         is.read(readChunkHeader, fixedChunkHeaderSize);
@@ -137,10 +135,7 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename) {
         is.read(readChunkContent, chunkContentSize);
         // int chunkNumber = parseInt32(readChunkHeader);
         fileSize += chunkContentSize;
-        count++;
     }
-    // std::cout<<count;
-    // std::cout<<"\n";
     is.close();
 
     std::ofstream outfile;
@@ -153,9 +148,7 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename) {
         int chunkNumber = parseInt32(readChunkHeader);
         outfile.seekp((chunkNumber - 1) * fixedChunkContentSize);
         outfile.write(readChunkContent, chunkContentSize);
-
     }
-    //std::cout<<"\n";
     is2.close();
     outfile.close();
 
@@ -256,17 +249,44 @@ bool Storage::doesFileExist(const std::string &name) {
     return f.good();
 }
 
+bool Storage::addFileToDownloadFolder(std::string pathToFile, std::string fileName) {
+    std::string pathToFileInDownloadFolder = pathToDownloadFolder + "\\" + fileName;
+    return CopyFile(pathToFile.c_str(), pathToFileInDownloadFolder.c_str(), FALSE);
+}
+
+int Storage::getFinalChunkNumber(std::string fileName) {
+    std::string pathToFileCompleted = pathToDownloadFolder + "/" + fileName;
+
+    std::ifstream is(pathToFileCompleted, std::ios::binary);
+    char readChunkContent[fixedChunkContentSize];
+    int count = 1;
+    while (is.peek() != std::ifstream::traits_type::eof()) { // loop getting chunk
+        is.read(readChunkContent, fixedChunkContentSize);
+        is.peek();
+        if (is.eof()) {
+            is.close();
+            return count;
+        }
+        count++;
+    }
+    is.close();
+
+    return count;
+}
+
 int main() {
     Storage *stor = new Storage("./tester");
     char temp[2058];
     size_t totalChunkSize;
     size_t *chunkSizeRecieved = &totalChunkSize;
+    //stor->addFileToDownloadFolder("C:\\Users\\Jonathan Weng\\CLionProjects\\cs3103_p2p\\cmake-build-debug\\tester\\mygit.exe", "mygi");
+    //std::cout<<stor->getFinalChunkNumber("2.txt");
     int i;
     while (1) {
         i = 1 + rand() % 1000;
-        int work = stor->getChunk(temp, "test2.out", i, chunkSizeRecieved);
+        int work = stor->getChunk(temp, "test.t", i, chunkSizeRecieved);
         if (work != -1) {
-            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test8.out");
+            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test.out");
         }
     }
     return 0;

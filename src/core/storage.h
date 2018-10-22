@@ -1,6 +1,7 @@
 // STORAGE.H
 #ifndef STORAGE_H
 #define STORAGE_H
+
 #include <iostream>
 #include <fstream>
 
@@ -9,16 +10,17 @@ const int FIXED_CHUNK_HEADER_SIZE = 10;
 const int FIXED_CHUNK_CONTENT_SIZE = 2048;
 const int FIXED_CHUNK_SIZE = FIXED_CHUNK_CONTENT_SIZE + FIXED_CHUNK_HEADER_SIZE; // 2058
 
-class Storage
-{
+class Storage {
     static const int fixedChunkContentSize = FIXED_CHUNK_CONTENT_SIZE;
     static const int fixedChunkHeaderSize = FIXED_CHUNK_HEADER_SIZE;
     static const int fixedChunkSizeWithHeader = FIXED_CHUNK_SIZE;
     std::string pathToDownloadFolder;
-    bool doesFileExist (const std::string& name);
+
+    bool doesFileExist(const std::string &name);
+
     void sortAndUpdateFullyDownloadedFile(std::string filename);
 
-  public:
+public:
 
     // pathToDownloadFolder - string of path to download folder e.g "./download"
     Storage(std::string pathToDownloadFolder);
@@ -39,10 +41,24 @@ class Storage
      * chunkNumber - chunkNumber to retreive
      * chunkByteSize - Pointer to a size_t to be written, which indicates the total size of the chunk retrieved
      */
-    int getChunk(void *ptrToFillWithChunkData, std::string filename, int chunkNumber, size_t * chunkByteSize);
+    int getChunk(void *ptrToFillWithChunkData, std::string filename, int chunkNumber, size_t *chunkByteSize);
+
+    /**
+     * adds file to donwload folder to be able to get chunk
+     * @param pathToFile - absolute path to file
+     * @param fileName - filename to save as
+     * @return - true if success, false if false
+     */
+    bool addFileToDownloadFolder(std::string pathToFile, std::string fileName);
+
+    // gets the final chunk number / total number of chunks in file
+    // only fully downloaded file
+    int getFinalChunkNumber(std::string fileName);
+
 };
 
-void serializeInt32(char * buf, int32_t val);
-int32_t parseInt32(char * buf);
+void serializeInt32(char *buf, int32_t val);
+
+int32_t parseInt32(char *buf);
 
 #endif
