@@ -3,17 +3,25 @@
 #include <sys/stat.h> 
 #include <sys/types.h> 
 #include <unistd.h>
+#include <windows.h>
 
 Storage::Storage(std::string pathToDownloadFolder)
 {
     this->pathToDownloadFolder = pathToDownloadFolder;
+
     // create download directory
     if(!doesFileExist(pathToDownloadFolder)){
-        // TODO CHANGE TO WINDOWS
-        if (mkdir(pathToDownloadFolder.c_str(), 0777) == -1) {
-            std::cerr << "Error :  " << strerror(errno) << std::endl; 
-        } else {
-            std::cout << "Directory created"; 
+        if (CreateDirectory(this->pathToDownloadFolder.c_str(), NULL))
+        {
+            // Directory created
+        }
+        else if (ERROR_ALREADY_EXISTS == GetLastError())
+        {
+            // Directory already exists
+        }
+        else
+        {
+            // Failed for some other reason
         }
     }
 }
@@ -51,11 +59,12 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
 
     char readChunkContent[fixedChunkContentSize];
     char readChunkHeader[fixedChunkHeaderSize];
-    std::ifstream is(pathToFileOfDownloading);
+    std::ifstream is(pathToFileOfDownloading, std::ios::binary);
     int currChunkNumber;
     while (is.peek() != std::ifstream::traits_type::eof()){ // loop and search
         is.read(readChunkHeader,fixedChunkHeaderSize);
         is.read(readChunkContent,parseInt32(readChunkHeader+4));
+        char* temp = readChunkHeader;
         currChunkNumber = parseInt32(readChunkHeader);
 
         if(currChunkNumber == chunkNumberToSave) {
@@ -68,14 +77,13 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
             finalChunkFound = true;
             finalChunkNumber = parseInt32(readChunkHeader);
         }
-
     }
     is.close();
-
+    char * temp = (char*)ptrToChunkData;
     // append chunk to end of file
     std::ofstream myfile;
-    myfile.open (pathToFileOfDownloading, std::ios::app);
-    myfile.write( (char*)ptrToChunkData, numOfCharInChunk );    
+    myfile.open (pathToFileOfDownloading, std::ios::binary | std::ios::app);
+    myfile.write( (char*)ptrToChunkData, numOfCharInChunk);
     myfile.close();
 
     if(!finalChunkFound) {
@@ -89,10 +97,11 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
         chunkFlags[i] = false;
     }
 
-    std::ifstream is2(pathToFileOfDownloading);
+    std::ifstream is2(pathToFileOfDownloading, std::ios::binary);
     while (is2.peek() != std::ifstream::traits_type::eof()){ 
         is2.read(readChunkHeader,fixedChunkHeaderSize);
         is2.read(readChunkContent, parseInt32(readChunkHeader+4));
+        char * temp = readChunkHeader;
         chunkFlags[parseInt32(readChunkHeader)] = true;
     }
     is2.close();
@@ -129,7 +138,7 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename){
 
     char readChunkContent[fixedChunkContentSize];
     char readChunkHeader[fixedChunkHeaderSize];
-    std::ifstream is(pathToFileOfDownloading);
+    std::ifstream is(pathToFileOfDownloading, std::ios::binary);
     int count = 1;
     int fileSize = 0;
     while (is.peek() != std::ifstream::traits_type::eof()){ // loop and search
@@ -145,8 +154,8 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename){
     is.close();
 
     std::ofstream outfile;
-    outfile.open (pathToFileCompleted);
-    std::ifstream is2(pathToFileOfDownloading);
+    outfile.open (pathToFileCompleted, std::ios::binary);
+    std::ifstream is2(pathToFileOfDownloading, std::ios::binary);
     while (is2.peek() != std::ifstream::traits_type::eof()){ // loop and search
         is2.read(readChunkHeader,fixedChunkHeaderSize);
         int chunkContentSize = parseInt32(readChunkHeader+4);
@@ -178,7 +187,7 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
 
     if(doesFileExist(pathToFileCompleted)){
         // get from completed file
-        std::ifstream is(pathToFileCompleted);
+        std::ifstream is(pathToFileCompleted, std::ios::binary);
         char readChunk[fixedChunkSizeWithHeader];
         char readChunkContent[fixedChunkContentSize];
         char readChunkHeader[fixedChunkHeaderSize];
@@ -197,11 +206,11 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
                 if(is.eof()){
                     readChunkHeader[8] = true;
                 }
-
-                *chunkTotalByteSize = chunkContentSize + fixedChunkHeaderSize;                
+                *chunkTotalByteSize = chunkContentSize + fixedChunkHeaderSize;
                 memcpy(readChunk, readChunkHeader, fixedChunkHeaderSize);
                 memcpy(readChunk+fixedChunkHeaderSize, readChunkContent, chunkContentSize);
                 memcpy(ptrToFillWithChunkData, readChunk, fixedChunkSizeWithHeader);
+                char * temp = (char*) ptrToFillWithChunkData;
 
                 is.close();
                 return 1;
@@ -216,7 +225,7 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
         char readChunk[fixedChunkSizeWithHeader];
         char readChunkContent[fixedChunkContentSize];
         char readChunkHeader[fixedChunkHeaderSize];
-        std::ifstream is(pathToFileOfDownloading);
+        std::ifstream is(pathToFileOfDownloading, std::ios::binary);
         while (is.peek() != std::ifstream::traits_type::eof()){ // loop and search
             is.read(readChunkHeader,fixedChunkHeaderSize);
             int chunkContentSize = parseInt32(readChunkHeader+4);
@@ -240,15 +249,21 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
 
 void serializeInt32(char * buf, int32_t val)
 {
-    memcpy(buf, &val, 4);
+    uint32_t uval = val;
+    buf[0] = uval;
+    buf[1] = uval >> 8;
+    buf[2] = uval >> 16;
+    buf[3] = uval >> 24;
 }
 
 int32_t parseInt32(char * buf)
 {
-    int32_t val;
-    memcpy(&val, buf, 4);
-    return val;
+    // This prevents buf[i] from being promoted to a signed int.
+    uint32_t u0 = (unsigned char)buf[0], u1 = (unsigned char)buf[1], u2 = (unsigned char)buf[2], u3 = (unsigned char)buf[3];
+    uint32_t uval = u0 | (u1 << 8) | (u2 << 16) | (u3 << 24);
+    return uval;
 }
+
 
 bool Storage::doesFileExist (const std::string& name) {
     std::ifstream f(name.c_str());
@@ -261,12 +276,14 @@ int main()
     char temp[2058];
     size_t totalChunkSize;
     size_t * chunkSizeRecieved = &totalChunkSize;
+    //int i =1;
     while(1){
         int i = rand() % 2000 + 1; // random test for file size less than 2000 * chunk content size
-        int work = stor->getChunk(temp,"test.png",i, chunkSizeRecieved);
+        int work = stor->getChunk(temp,"test.t",i, chunkSizeRecieved);
         if(work != -1){
-            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test7.out");
+            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test2.out");
         }
+        //i++;
     }
 
     return 0;

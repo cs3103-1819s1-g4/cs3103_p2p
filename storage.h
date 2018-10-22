@@ -42,7 +42,7 @@ class Storage
     int getChunk(void *ptrToFillWithChunkData, std::string filename, int chunkNumber, size_t * chunkByteSize);
 };
 
-void serializeInt32(char * buf, int32_t val);
-int32_t parseInt32(char * buf);
+void serializeInt32(char *buf, int32_t val);
+int32_t parseInt32(char *buf);
 
 #endif
