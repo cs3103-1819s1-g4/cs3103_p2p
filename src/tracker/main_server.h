@@ -20,7 +20,7 @@ class MainServer {
 private:
     bool online;
     SOCKET listen_sock;
-    IN_ADDR server_IP{};
+    IN_ADDR server_ip;
 public:
     /**
      * Constructor for Main Server
@@ -35,9 +35,10 @@ public:
         else
             online = true;
 
-        get_private_IP(server_IP);
+        get_private_IP(server_ip);
         recv_buffer.init_RecvBuffer(PACKET_SIZE);
     };
+
     ~MainServer() {
         stop();
         if (online)

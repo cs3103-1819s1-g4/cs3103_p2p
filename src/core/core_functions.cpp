@@ -93,7 +93,7 @@ void get_private_IP(IN_ADDR &IP) {
         if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                           nullptr, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),       // Default language
                           (LPTSTR) &lpMsgBuf, 0, nullptr)) {
-            printf("\tError: %s\n", lpMsgBuf);
+            std::cout << "\tError: " << lpMsgBuf << "\n";
             LocalFree(lpMsgBuf);
         }
         exit(1);

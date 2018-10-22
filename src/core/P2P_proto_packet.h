@@ -8,13 +8,13 @@
 #include <iostream>
 #include "tracker_entries.h"
 
-#define REQUEST_TYPE_FIELD_LEN 7
-#define RESPONSE_TYPE_FIELD_LEN 8
+#define REQUEST_TYPE_FIELD_LEN 8
+#define RESPONSE_TYPE_FIELD_LEN 9
 
 using namespace std;
 
-static const char REQUEST_TYPE_FIELD[] = "REQUEST";
-static const char RESPONSE_TYPE_FIELD[] = "RESPONSE";
+static const char REQUEST_TYPE_FIELD[] = "REQUEST\\0";
+static const char RESPONSE_TYPE_FIELD[] = "RESPONSE\\0";
 
 /**
  * There are 2 default constructors for P2P request packet as 1 has variable length while the other has
@@ -31,6 +31,12 @@ private:
 public:
     /**
      * Constructor for creating P2P request packets for flag = 1, 2, 3, 4, 7
+     * 1 - Download file from swarm. File name must be filled
+     * 2 - Ask tracker for updated list, File name must be filled
+     * 3 - Inform tracker a certain chunk has been successfully downloaded. File name, chunk no must
+     * be filled
+     * 4 - Upload a new file. File name, chunk no, IP address must be filled
+     * 7 - Query for a specified file. File name must be filled
      * @param flag
      * @param file_name_len
      * @param file_name
@@ -38,58 +44,57 @@ public:
      * @param saddr
      * @return
      */
-    P2P_request_pkt* create_P2P_request_pkt(uint8_t flag, uint8_t file_name_len, char *file_name
+    P2P_request_pkt(uint8_t flag, uint8_t file_name_len, char *file_name
             , uint8_t chunk_no, uint32_t saddr) {
 
-        assert((flag > 0 && flag < 5) || flag == 7);   // check that flag is 1-7
+        assert((flag > 0 && flag < 5) || flag == 7);
         assert(file_name_len > 0);                 // Check that file length > 0
 
-        P2P_request_pkt *packet_to_return = nullptr;
-        size_t packet_size;
-
         try {
-            packet_size = sizeof(P2P_request_pkt) + file_name_len;
-            packet_to_return = (P2P_request_pkt *) malloc(packet_size);
-            strcpy_s(packet_to_return->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
-            packet_to_return->flag = flag;
-            packet_to_return->file_name_len = file_name_len;
-            strcpy_s(packet_to_return->file_name, file_name_len, file_name);
-            packet_to_return->chunk_no = chunk_no;
-            packet_to_return->saddr = saddr;
+            strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
+            this->flag = flag;
+            this->file_name_len = file_name_len;
+            this->file_name = (char *) malloc(this->file_name_len);
+            strcpy_s(this->file_name, this->file_name_len, file_name);
+            file_name[file_name_len] = '\0';
+            this->chunk_no = chunk_no;
+            this->saddr = saddr;
 
         } catch (std::exception &e) {
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating request packet failed\n";
         }
-        return packet_to_return;
     };
 
     /**
-     * Constructor for creating P2P request packets for flag = 5, 6
-     * @param flag
-     * @param saddr
-     * @return
-     */
-    P2P_request_pkt* create_P2P_request_pkt(uint8_t flag, uint32_t saddr) {
+    * Constructor for creating P2P request packets for flag = 5, 6
+    * 5 - Exit from swarm. IP address must be filled
+    * 6 - Query the tracker for list of files. None filled
+    * @param flag
+    * @param saddr
+    * @return
+    */
+    P2P_request_pkt(uint8_t flag, uint32_t saddr) {
 
         assert(flag == 5 || flag == 6);
-        P2P_request_pkt *packet_to_return = nullptr;
-
         try {
-            packet_to_return = (P2P_request_pkt *) malloc(sizeof(P2P_request_pkt));
-            strcpy_s(packet_to_return->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
-            packet_to_return->flag = flag;
-            packet_to_return->file_name_len = 0;
-            packet_to_return->file_name = nullptr;
-            packet_to_return->chunk_no = NULL;
-            packet_to_return->saddr = saddr;
+            strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
+            this->flag = flag;
+            this->file_name_len = 0;
+            this->file_name = nullptr;
+            this->chunk_no = NULL;
+            this->saddr = saddr;
 
         } catch (std::exception &e) {
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating request packet failed\n";
         }
+    };
 
-        return packet_to_return;
+    ~P2P_request_pkt() {
+        if(file_name != nullptr)
+            file_name = nullptr;
     };
 };
+
 
 /**
  * Have to be declare using the following: P2P_response_pkt<T> name
@@ -102,18 +107,15 @@ private:
     uint8_t list_len;
     vector<T> entry_list;
 public:
-    P2P_response_pkt* create_P2P_response_pkt(uint8_t list_len, vector<T> list) {
+    P2P_response_pkt(uint8_t list_len, vector<T> list) {
         assert(list_len > 0);
 
-        P2P_response_pkt* packet_to_return = new P2P_response_pkt();
-
-        strcpy_s(packet_to_return->type, RESPONSE_TYPE_FIELD_LEN, RESPONSE_TYPE_FIELD);
-        packet_to_return->list_len = list_len;
+        strcpy_s(this->type, RESPONSE_TYPE_FIELD_LEN, RESPONSE_TYPE_FIELD);
+        this->list_len = list_len;
 
         for(int i=0 ; i<list_len ; i++) {
             packet_to_return->entry_list.push_back(list[i]);
         }
-        return packet_to_return;
     };
 };
 #endif //CS3103_P2P_P2P_PROTO_PACKET_H

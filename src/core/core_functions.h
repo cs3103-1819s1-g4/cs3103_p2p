@@ -12,7 +12,7 @@
 #include <iostream>
 #include <string>
 
-extern const unsigned int Q_LEN;
+const int Q_LEN = 100;
 
 void get_private_IP(IN_ADDR &IP);
 void print_main_server(struct sockaddr_in *addr, std::string port);
@@ -62,5 +62,4 @@ public:
     bool producer(SOCKET sock, sockaddr_in client_addr, int sin_size);
     void consumer(char *buffer);
 };
-
 #endif //CS3103_P2P_CORE_FUNCTIONS_H

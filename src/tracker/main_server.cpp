@@ -24,7 +24,7 @@ bool MainServer::start(const char *port) {
     hints.ai_socktype = SOCK_RAW;
     hints.ai_protocol = IPPROTO_UDP;
 
-    status = getaddrinfo(inet_ntoa(server_IP), port, &hints, &result);
+    status = getaddrinfo(inet_ntoa(server_ip), port, &hints, &result);
     if (status != 0) {
         std::cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
         return false;
@@ -79,7 +79,7 @@ unsigned int __stdcall socket_recv_thread(void *data) {
     fd_set read_fd_listen_sock;
 
     //configure file descriptors and timeout
-    time_listen_sock.tv_sec = 3;
+    time_listen_sock.tv_sec = 50;
     time_listen_sock.tv_usec = 0;
     FD_ZERO(&read_fd_listen_sock);
     FD_SET(listen_sock, &read_fd_listen_sock); // always look for connection attempts
