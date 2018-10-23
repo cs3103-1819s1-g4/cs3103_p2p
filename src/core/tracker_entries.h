@@ -24,13 +24,14 @@ public:
      * @param public_IP
      * @param port_no
      */
-    TrackerClientEntry(uint8_t file_name_len, char *file_name_buffer, uint8_t chunk_no, uint32_t public_IP
+    TrackerClientEntry(uint8_t file_name_len, char *file_name, uint8_t chunk_no, uint32_t public_IP
             , uint16_t port_no) {
-        assert(file_name_len > 0);
+        assert(file_name_len > 0 && file_name_len < 256);
         try {
-            this->file_name_len = file_name_len;
-            this->file_name = (char *)malloc(file_name_len);
-            strcpy_s(file_name, file_name_len, file_name_buffer);
+            this->file_name_len = (uint8_t) (file_name_len + 1);
+            this->file_name = (char *)malloc(this->file_name_len);
+            strcpy_s(file_name, file_name_len, file_name);
+            this->file_name[file_name_len] = '\0';
             this->chunk_no = chunk_no;
             this->public_IP = public_IP;
             this->port_no = port_no;
@@ -85,12 +86,13 @@ private:
     uint8_t file_name_len;
     char *file_name;
 public:
-    TrackerFileEntry(uint8_t file_name_len, char *file_name_buffer) {
-        assert(file_name_len > 0);
+    TrackerFileEntry(uint8_t file_name_len, char *file_name) {
+        assert(file_name_len > 0 && file_name_len < 256);
         try {
-            this->file_name_len = file_name_len;
-            this->file_name = (char *)malloc(file_name_len);
-            strcpy_s(file_name, file_name_len, file_name_buffer);
+            this->file_name_len = (uint8_t) (file_name_len + 1);
+            this->file_name = (char *)malloc(this->file_name_len);
+            strcpy_s(file_name, file_name_len, file_name);
+            this->file_name[file_name_len] = '\0';
 
         } catch (std::exception &e) {
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";

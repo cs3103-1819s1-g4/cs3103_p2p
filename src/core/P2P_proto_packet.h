@@ -48,15 +48,15 @@ public:
             , uint8_t chunk_no, uint32_t saddr) {
 
         assert((flag > 0 && flag < 5) || flag == 7);
-        assert(file_name_len > 0);                 // Check that file length > 0
+        assert(file_name_len > 0 && file_name_len < 256);   // leave a space for '\0'
 
         try {
             strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
             this->flag = flag;
-            this->file_name_len = file_name_len;
+            this->file_name_len = (uint8_t) (file_name_len + 1);
             this->file_name = (char *) malloc(this->file_name_len);
-            strcpy_s(this->file_name, this->file_name_len, file_name);
-            file_name[file_name_len] = '\0';
+            strcpy_s(this->file_name, file_name_len, file_name);
+            this->file_name[file_name_len] = '\0';
             this->chunk_no = chunk_no;
             this->saddr = saddr;
 
@@ -114,7 +114,7 @@ public:
         this->list_len = list_len;
 
         for(int i=0 ; i<list_len ; i++) {
-            packet_to_return->entry_list.push_back(list[i]);
+            this->entry_list.push_back(list[i]);
         }
     };
 };
