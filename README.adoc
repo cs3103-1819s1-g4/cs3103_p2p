@@ -94,9 +94,13 @@ image::https://i.imgur.com/xnZcM9e.png[STUN implement]
 We will use a 10 byte header for each chunk to differentiate the chunks when reading and writing chunks into storage.
 
 Bytes of header:
+
 0-3 - Chunk Number
+
 4-7 - Chunk Content Size
+
 8 - Final Chunk Flag. True for final chunk
+
 9 - Unassigned
 
 The extensions of the file will differentiate a partially downloaded file from a fully downloaded file.
