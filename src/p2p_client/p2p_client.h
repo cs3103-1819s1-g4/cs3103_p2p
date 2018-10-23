@@ -15,8 +15,6 @@
 
 using namespace std;
 
-const unsigned int MAX_CLIENT_BUFFER_LEN = 2048;
-
 // Class p2p_client
 class p2p_client {
 
