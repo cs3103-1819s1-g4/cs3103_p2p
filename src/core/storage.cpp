@@ -274,18 +274,45 @@ int Storage::getFinalChunkNumber(std::string fileName) {
     return count;
 }
 
+// WIP
+// int Storage::getArrOfChunkNumbers(int * buf, std::string filename){
+//     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
+//     std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
+//     char readChunkContent[fixedChunkContentSize];
+//     char readChunkHeader[fixedChunkHeaderSize];
+//     std::ifstream is(pathToFileOfDownloading, std::ios::binary);
+//     int fileSize = 0;
+//     while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
+//         is.read(readChunkHeader, fixedChunkHeaderSize);
+//         int chunkContentSize = parseInt32(readChunkHeader + 4);
+//         is.read(readChunkContent, chunkContentSize);
+//         // int chunkNumber = parseInt32(readChunkHeader);
+//         fileSize += chunkContentSize;
+//     }
+//     is.close();
+// }
+
+
+// This is an example of how to use the storage class
 int main() {
-    Storage *stor = new Storage("./tester");
-    char temp[2058];
-    size_t totalChunkSize;
-    size_t *chunkSizeRecieved = &totalChunkSize;
-    //stor->addFileToDownloadFolder("C:\\Users\\Jonathan Weng\\CLionProjects\\cs3103_p2p\\cmake-build-debug\\tester\\mygit.exe", "mygi");
+    Storage *stor = new Storage("./downloads");
+
+    //stor->addFileToDownloadFolder("C:\\Users\\Jonathan Weng\\CLionProjects\\cs3103_p2p\\cmake-build-debug\\downloads\\mygit.exe", "mygi");
     //std::cout<<stor->getFinalChunkNumber("2.txt");
+
+    char temp[2058]; // temp to be used to get and pass chunk data has to be maximum chunk size
+    // the chunk content size can be from 1-2048 to be used when saving chunk
+
+    size_t totalChunkSize; // to be used when getting chunk, the chunk size which includes chunk content and header size
+    // will be wrtten into this variable so that you know the size of the chunk out of the 2058 bytes temp arr.
+    size_t *chunkSizeRecieved = &totalChunkSize;
+
     int i;
     while (1) {
         i = 1 + rand() % 1000;
         int work = stor->getChunk(temp, "test.t", i, chunkSizeRecieved);
         if (work != -1) {
+            // total chunk size includes the size of the chunk header + size of chunk content
             stor->saveChunk(temp, sizeof(char), totalChunkSize, "test.out");
         }
     }

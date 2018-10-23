@@ -55,6 +55,11 @@ public:
     // only fully downloaded file
     int getFinalChunkNumber(std::string fileName);
 
+    // WIP
+    // // paramter buf - array of integers of chunk numbers that you have
+    // // returns the total number of current chunks of file (the array size of buf)
+    // int Storage::getArrOfChunkNumbers(int * buf, std::string filename)
+
 };
 
 void serializeInt32(char *buf, int32_t val);
