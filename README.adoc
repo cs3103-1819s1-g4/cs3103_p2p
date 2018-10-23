@@ -91,11 +91,13 @@ image::https://i.imgur.com/xnZcM9e.png[STUN implement]
 
 == Storage Chunking
 
-We will use a 2 byte header for each chunk to differentiate the chunks when reading and writing chunks into storage.
+We will use a 10 byte header for each chunk to differentiate the chunks when reading and writing chunks into storage.
 
-The 1st byte will be the last chunk flag. 1 for last chunk, 0 otherwise. 
-
-The 2nd byte will be the chunk number.
+Bytes of header:
+0-3 - Chunk Number
+4-7 - Chunk Content Size
+8 - Final Chunk Flag. True for final chunk
+9 - Unassigned
 
 The extensions of the file will differentiate a partially downloaded file from a fully downloaded file.
 
