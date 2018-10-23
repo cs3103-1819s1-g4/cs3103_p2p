@@ -11,7 +11,6 @@
 using namespace std;
 
 bool recv_socket_active;
-const unsigned int Q_LEN = 100;
 const unsigned int PACKET_SIZE = 2048;
 
 int main() {

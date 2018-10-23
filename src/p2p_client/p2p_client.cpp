@@ -3,7 +3,6 @@
 //
 
 #include "p2p_client.h"
-#include "../core/P2P_proto_packet.h"
 
 // Winsock variables
 SOCKET connect_socket;
@@ -19,11 +18,11 @@ void p2p_client::display_menu() {
 
     printf("******P2P CLIENT******\n"
            "Enter options (1 to 5):\n"
-           "1. Download a file\n"
-           "2. Upload a file\n"
-           "3. Query for a list of files available in tracker\n"
-           "4. Query for a file available in tracker\n"
-           "5. Quit\n"
+           "\t1. Download a file\n"
+           "\t2. Upload a file\n"
+           "\t3. Query for a list of files available in tracker\n"
+           "\t4. Query for a file available in tracker\n"
+           "\t5. Quit\n"
            "Enter option: ");
 
 }
@@ -48,7 +47,7 @@ int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
         return 1;
     }
 
-    for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
+    for(ptr=result; ptr != nullptr ; ptr=ptr->ai_next) {
 
         connect_socket = socket(ptr->ai_family, ptr->ai_socktype,
                                ptr->ai_protocol);
@@ -89,6 +88,8 @@ void p2p_client::query_list_of_files(char *tracker_port) {
 }
 
 void p2p_client::query_file(char *tracker_port, string filename) {
+
+    assert(filename.length() < 256);
 
     this->connect_to_tracker(this->tracker_ip, tracker_port);
 

@@ -4,13 +4,11 @@
 #ifndef P2P_CLIENT_H
 #define P2P_CLIENT_H
 
-#include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <string>
-#include <iostream>
 
-#pragma comment(lib, "Mswsock.lib")
-#pragma comment(lib, "ws2_32.lib")
+#include "../core/core_functions.h"
+#include "../core/P2P_proto_packet.h"
+
 
 #define DEFAULT_TRACKER_PORT "80"
 #define DEFAULT_P2P_SERVER_PORT "6881"
@@ -23,9 +21,20 @@ class p2p_client {
 private:
     bool online;
     char *tracker_ip;
+    uint32_t client_ip;
 public:
     // Constructor
-    p2p_client(char *tracker_ip): online{true}, tracker_ip{tracker_ip} {}
+    explicit p2p_client(char *tracker_ip): online{true}, tracker_ip{tracker_ip} {
+
+        /*TODO: To get client's private IP
+        IN_ADDR temp{};
+        get_private_IP(temp);
+        client_ip = temp.s_addr;
+
+
+        std::cout << "Client running at " << inet_ntoa(temp.s_addr) << "\nTracker running at "
+         << tracker_ip << "\n";*/
+    }
 
     void display_menu();
 
