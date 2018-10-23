@@ -24,21 +24,18 @@ private:
     bool online;
     char *tracker_ip;
     uint32_t client_ip;
-    char *send_buffer;
-    char *recv_buffer;
 public:
     // Constructor
     explicit p2p_client(char *tracker_ip): online{true}, tracker_ip{tracker_ip} {
 
-        /* To get client's private IP */
+        /*TODO: To get client's private IP
         IN_ADDR temp{};
         get_private_IP(temp);
-        client_ip = ntohl(temp.s_addr);
+        client_ip = temp.s_addr;
 
-        send_buffer = (char *)malloc(MAX_CLIENT_BUFFER_LEN);
-        recv_buffer = (char *)malloc(MAX_CLIENT_BUFFER_LEN);
 
-        std::cout << "Client running at " << client_ip << "\nTracker running at " << tracker_ip << "\n";
+        std::cout << "Client running at " << inet_ntoa(temp.s_addr) << "\nTracker running at "
+         << tracker_ip << "\n";*/
     }
 
     void display_menu();
@@ -58,8 +55,6 @@ public:
     ~p2p_client() {
         online = false;
         tracker_ip = nullptr;
-        free(send_buffer);
-        free(recv_buffer);
     }
 };
 

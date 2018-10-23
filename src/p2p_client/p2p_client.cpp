@@ -76,10 +76,10 @@ void p2p_client::query_list_of_files(char *tracker_port) {
 
     this->connect_to_tracker(this->tracker_ip, tracker_port);
 
-    P2P_request_pkt request_pkt(6, NULL);
-    send_buffer = (char *) &request_pkt;
+    string str = "REQUEST 6";
+    const char *buf = str.c_str();
 
-    iresult = sendto(connect_socket, send_buffer, sizeof(request_pkt), 0, ptr->ai_addr, ptr->ai_addrlen);
+    iresult = sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
     // TODO: Client needs to receive the list of files from tracker
 
@@ -93,15 +93,11 @@ void p2p_client::query_file(char *tracker_port, string filename) {
 
     this->connect_to_tracker(this->tracker_ip, tracker_port);
 
-    // convert string to char array
-    auto filename_len = (uint8_t) (filename.length() + 1);
-    char *filename_char = new char[filename_len];
-    strcpy(filename_char, filename.c_str());
+    string str = "REQUEST 7 ";
+    str.append(filename);
+    const char *buf = str.c_str();
 
-    P2P_request_pkt request_pkt(7, filename_len, filename_char, NULL, NULL);
-    send_buffer = (char *) &request_pkt;
-
-    iresult = sendto(connect_socket, send_buffer, sizeof(request_pkt), 0, ptr->ai_addr, ptr->ai_addrlen);
+    iresult = sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
     // TODO: Client needs to receive the file from the tracker
 

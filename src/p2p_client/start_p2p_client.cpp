@@ -29,6 +29,7 @@ int main() {
     int user_option;
     p2p_client client(tracker_ip);
 
+    free(tracker_ip);
     do {
         client.display_menu();
         user_option = execute_user_option(client);
