@@ -14,6 +14,7 @@ Storage::Storage(std::string pathToDownloadFolder) {
             // Directory already exists
         } else {
             // Failed for some other reason
+            lastError = "Failed to create new directory";
         }
     }
 }
@@ -27,6 +28,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
     // file is complete
     if (doesFileExist(pathToFileCompleted)) {
         // should not be saving a chunk to a completed file
+        lastError = "File already fully downloaded";
         return -1;
     }
 
@@ -58,6 +60,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
 
         if (currChunkNumber == chunkNumberToSave) {
             // if chunk to save is already downloaded
+            lastError = "Chunk number for file already saved";
             return -1;
         }
 
@@ -152,19 +155,22 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename) {
     is2.close();
     outfile.close();
 
+    DeleteFile(pathToFileOfDownloading.c_str());
+
 }
 
 int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int chunkNumber,
                       size_t *chunkTotalByteSize) {
     if (chunkNumber <= 0) {
         // chunk number should be more than 0
+        lastError = "Chunk number should be more than 0";
         return -1;
     }
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
     std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
     // file does not exist
     if (!doesFileExist(pathToFileCompleted) && !doesFileExist(pathToFileOfDownloading)) {
-        // should not be saving a chunk to a completed file
+        lastError = "Downloaded file nor downloading file does not exist";
         return -1;
     }
 
@@ -201,6 +207,7 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
             count++;
         }
         is.close();
+        lastError = "Chunk number cannot be found from completed file";
         return -1;
 
     } else if (doesFileExist(pathToFileOfDownloading)) {
@@ -224,10 +231,12 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
             }
         }
         is.close();
-
+        lastError = "Chunk number cannot be found from downloading file";
+        return -1;
     }
 
-    return 1;
+    lastError = "end of getChunk, this line should not be reached";
+    return -1;
 }
 
 void serializeInt32(char *buf, int32_t val) {
@@ -256,7 +265,10 @@ bool Storage::addFileToDownloadFolder(std::string pathToFile, std::string fileNa
 
 int Storage::getFinalChunkNumber(std::string fileName) {
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + fileName;
-
+    if (!doesFileExist(pathToFileCompleted)) {
+        lastError = "Fully Downloaded file does not exist";
+        return -1;
+    }
     std::ifstream is(pathToFileCompleted, std::ios::binary);
     char readChunkContent[fixedChunkContentSize];
     int count = 1;
@@ -274,23 +286,57 @@ int Storage::getFinalChunkNumber(std::string fileName) {
     return count;
 }
 
-// WIP
-// int Storage::getArrOfChunkNumbers(int * buf, std::string filename){
-//     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
-//     std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
-//     char readChunkContent[fixedChunkContentSize];
-//     char readChunkHeader[fixedChunkHeaderSize];
-//     std::ifstream is(pathToFileOfDownloading, std::ios::binary);
-//     int fileSize = 0;
-//     while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
-//         is.read(readChunkHeader, fixedChunkHeaderSize);
-//         int chunkContentSize = parseInt32(readChunkHeader + 4);
-//         is.read(readChunkContent, chunkContentSize);
-//         // int chunkNumber = parseInt32(readChunkHeader);
-//         fileSize += chunkContentSize;
-//     }
-//     is.close();
-// }
+ int Storage::getArrOfChunkNumbers(int * buf, size_t maxElements, std::string filename){
+     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
+     std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
+
+     if (!doesFileExist(pathToFileCompleted) && !doesFileExist(pathToFileOfDownloading)) {
+         lastError = "Downloaded file nor downloading file does not exist";
+         return -1;
+     }
+
+     char readChunkContent[fixedChunkContentSize];
+     char readChunkHeader[fixedChunkHeaderSize];
+     int count = 0;
+
+     if (doesFileExist(pathToFileCompleted)) {
+
+         std::ifstream is(pathToFileCompleted, std::ios::binary);
+         while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
+             if(count>maxElements-1){
+                 lastError = "Not enough int array buffer allocated for getting arr of chunk numbers";
+                 return -1;
+             }
+             is.read(readChunkContent, fixedChunkContentSize);
+             buf[count] = count + 1;
+             count ++;
+         }
+         is.close();
+
+     } else if(doesFileExist(pathToFileOfDownloading)) {
+
+         std::ifstream is(pathToFileOfDownloading, std::ios::binary);
+         while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
+             if(count>maxElements-1){
+                 lastError = "Not enough int array buffer allocated for getting arr of chunk numbers";
+                 return -1;
+             }
+             is.read(readChunkHeader, fixedChunkHeaderSize);
+             int chunkContentSize = parseInt32(readChunkHeader + 4);
+             is.read(readChunkContent, chunkContentSize);
+             int chunkNumber = parseInt32(readChunkHeader);
+             buf[count] = chunkNumber;
+             count ++;
+         }
+         is.close();
+     }
+
+     return count;
+ }
+
+ std::string Storage::getLastError(){
+    return lastError;
+}
 
 
 // This is an example of how to use the storage class
@@ -299,6 +345,26 @@ int main() {
 
     //stor->addFileToDownloadFolder("C:\\Users\\Jonathan Weng\\CLionProjects\\cs3103_p2p\\cmake-build-debug\\downloads\\mygit.exe", "mygi");
     //std::cout<<stor->getFinalChunkNumber("2.txt");
+
+    int finNo = stor->getFinalChunkNumber("test3.out");
+    if(finNo>0){
+        std::cout<< "fino: " << finNo << std::endl;
+    } else {
+        std::cout<<stor->getLastError() << std::endl;
+    }
+    int myarr[1000];
+    int chunNo = stor->getArrOfChunkNumbers(myarr, 1000, "test3.out");
+    if(chunNo>0){
+        std::cout<< "chunno: "<< chunNo << std::endl;
+//        int j;
+//        for(j=0;j<chunNo;j++){
+//            std::cout << myarr[j] << std::endl;
+//        }
+    } else {
+        std::cout<< "lasterror: " << stor->getLastError() << std::endl;
+    }
+
+
 
     char temp[2058]; // temp to be used to get and pass chunk data has to be maximum chunk size
     // the chunk content size can be from 1-2048 to be used when saving chunk
@@ -310,10 +376,10 @@ int main() {
     int i;
     while (1) {
         i = 1 + rand() % 1000;
-        int work = stor->getChunk(temp, "test.t", i, chunkSizeRecieved);
+        int work = stor->getChunk(temp, "test3.out", i, chunkSizeRecieved);
         if (work != -1) {
             // total chunk size includes the size of the chunk header + size of chunk content
-            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test.out");
+            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test6.out");
         }
     }
     return 0;

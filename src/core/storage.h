@@ -15,6 +15,7 @@ class Storage {
     static const int fixedChunkHeaderSize = FIXED_CHUNK_HEADER_SIZE;
     static const int fixedChunkSizeWithHeader = FIXED_CHUNK_SIZE;
     std::string pathToDownloadFolder;
+    std::string lastError = "no last error";
 
     bool doesFileExist(const std::string &name);
 
@@ -55,11 +56,13 @@ public:
     // only fully downloaded file
     int getFinalChunkNumber(std::string fileName);
 
-    // WIP
-    // // paramter buf - array of integers of chunk numbers that you have
-    // // returns the total number of current chunks of file (the array size of buf)
-    // int Storage::getArrOfChunkNumbers(int * buf, std::string filename)
+    // paramter buf - array of integers of chunk numbers that you have
+    // count - Number of elements that can be used in buffer
+    // returns the total number of current chunks of file (the array size of buf)
+    // if unsuccessful if -1
+    int getArrOfChunkNumbers(int * buf, size_t count, std::string filename);
 
+    std::string getLastError();
 };
 
 void serializeInt32(char *buf, int32_t val);
