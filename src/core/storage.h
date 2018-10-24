@@ -4,6 +4,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <windows.h>
+#include <mutex>
 
 // first 4 bytes for chunk number, 4 bytes for chunk content length, 1 byte for final flag, 1 extra
 const int FIXED_CHUNK_HEADER_SIZE = 10;
@@ -16,6 +20,8 @@ class Storage {
     static const int fixedChunkSizeWithHeader = FIXED_CHUNK_SIZE;
     std::string pathToDownloadFolder;
     std::string lastError = "no last error";
+
+    std::mutex myMutex;
 
     bool doesFileExist(const std::string &name);
 
