@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <windows.h>
 #include <mutex>
+#include <string>
 
 // first 4 bytes for chunk number, 4 bytes for chunk content length, 1 byte for final flag, 1 extra
 const int FIXED_CHUNK_HEADER_SIZE = 10;

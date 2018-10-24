@@ -35,18 +35,13 @@ void tracker::init() {
         freeaddrinfo(result);
     }
 
-    int on = 1;
-    if( (setsockopt(serv_sock, IPPROTO_IP, IP_HDRINCL, (char *)&on, sizeof(on))) < 0 ) {
-        perror("setsockopt");
-    }
-
     if (::bind(serv_sock, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
         std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
         freeaddrinfo(result);
         closesocket(serv_sock);
     }
 
-    print_main_server((struct sockaddr_in *)result->ai_addr, port);
+    print_server((struct sockaddr_in *)result->ai_addr, port, "Tracker server");
     std::cout.flush();
 
     // We don't need this info any more
@@ -58,7 +53,7 @@ void tracker::init() {
 //keep listening for data
 
 void tracker::listen() {
-    while (1) {
+    while (true) {
         printf("Waiting for data...");
         fflush(stdout);
 

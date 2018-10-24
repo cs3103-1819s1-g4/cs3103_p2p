@@ -5,7 +5,7 @@ Storage::Storage(std::string pathToDownloadFolder) {
     this->pathToDownloadFolder = pathToDownloadFolder;
     // create download directory
     if (!doesFileExist(pathToDownloadFolder)) {
-        if (CreateDirectory(this->pathToDownloadFolder.c_str(), NULL)) {
+        if (CreateDirectory(this->pathToDownloadFolder.c_str(), nullptr)) {
             // Directory created
         } else if (ERROR_ALREADY_EXISTS == GetLastError()) {
             // Directory already exists
@@ -43,7 +43,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
 
     int chunkNumberToSave = parseInt32((char *) ptrToChunkData);
     // if saving chunk is final chunk
-    if ((bool) ((char *) ptrToChunkData)[8] == true) {
+    if ((bool) ((char *) ptrToChunkData)[8]) {
         finalChunkFound = true;
         finalChunkNumber = chunkNumberToSave;
     }
@@ -83,7 +83,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
     }
 
     // check if all chunks are downloaded
-    bool *chunkFlags = (bool *) malloc(finalChunkNumber + 1);
+    auto chunkFlags = (bool *) malloc(finalChunkNumber + 1);
     int i;
     for (i = 1; i <= finalChunkNumber; i++) {
         chunkFlags[i] = false;
@@ -99,7 +99,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
 
     bool fileCompleted = true;
     for (i = 1; i <= finalChunkNumber; i++) {
-        if (chunkFlags[i] == false) {
+        if (!chunkFlags[i]) {
             //std::cout<<i;
             fileCompleted = false;
             break;
@@ -187,7 +187,7 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
             // set chunk number
             serializeInt32(readChunkHeader, count);
             //set chunk content size
-            int chunkContentSize = (int) is.gcount();
+            auto chunkContentSize = (int) is.gcount();
             serializeInt32(readChunkHeader + 4, chunkContentSize);
             // set final flag
             readChunkHeader[8] = false;
@@ -297,6 +297,7 @@ int Storage::getFinalChunkNumber(std::string fileName) {
      std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
      std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
 
+     int maxCount = static_cast<int>(maxElements) - 1;
      if (!doesFileExist(pathToFileCompleted) && !doesFileExist(pathToFileOfDownloading)) {
          lastError = "Downloaded file nor downloading file does not exist";
          return -1;
@@ -310,7 +311,7 @@ int Storage::getFinalChunkNumber(std::string fileName) {
 
          std::ifstream is(pathToFileCompleted, std::ios::binary);
          while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
-             if(count>maxElements-1){
+             if(count > maxCount){
                  lastError = "Not enough int array buffer allocated for getting arr of chunk numbers";
                  return -1;
              }
@@ -324,7 +325,7 @@ int Storage::getFinalChunkNumber(std::string fileName) {
 
          std::ifstream is(pathToFileOfDownloading, std::ios::binary);
          while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
-             if(count>maxElements-1){
+             if(count > maxCount){
                  lastError = "Not enough int array buffer allocated for getting arr of chunk numbers";
                  return -1;
              }
@@ -345,7 +346,7 @@ int Storage::getFinalChunkNumber(std::string fileName) {
     return lastError;
 }
 
-
+/*
 // This is an example of how to use the storage class
 int main() {
     Storage *stor = new Storage("./downloads");
@@ -355,9 +356,9 @@ int main() {
 
     int finNo = stor->getFinalChunkNumber("test2.out");
     if(finNo>0){
-        std::cout<< "fino: " << finNo << std::endl;
+        std::cout << "fino: " << finNo << std::endl;
     } else {
-        std::cout<<stor->getLastError() << std::endl;
+        std::cout << stor->getLastError() << std::endl;
     }
     int myarr[1000];
     int chunNo = stor->getArrOfChunkNumbers(myarr, 1000, "test2.out");
@@ -390,4 +391,4 @@ int main() {
         }
     }
     return 0;
-}
+}*/

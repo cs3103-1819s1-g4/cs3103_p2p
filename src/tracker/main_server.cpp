@@ -50,7 +50,7 @@ bool MainServer::start(const char *port) {
         return false;
     }
 
-    print_main_server((struct sockaddr_in *)result->ai_addr, port);
+    print_server((struct sockaddr_in *)result->ai_addr, port);
     std::cout.flush();
 
     // We don't need this info any more
