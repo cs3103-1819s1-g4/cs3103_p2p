@@ -8,12 +8,12 @@ add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 set(BUILD_TRACKER tracker)
 set(SOURCE_FILES_TRACKER src/tracker/start_tracker.cpp src/tracker/tracker.cpp src/tracker/tracker.h
-        src/core/core_functions.cpp src/core/core_functions.h src/core/P2P_proto_packet.h)
+        src/core/core_functions.cpp src/core/core_functions.h src/core/P2P_proto_packet.h src/core/tracker_entries.cpp src/core/tracker_entries.h)
 add_executable(${BUILD_TRACKER} ${SOURCE_FILES_TRACKER})
 
 set(BUILD_CLIENT p2p_client)
 set(SOURCE_FILES_CLIENT src/p2p_client/start_p2p_client.cpp src/p2p_client/p2p_client.cpp src/p2p_client/p2p_client.h
-        src/core/core_functions.cpp src/core/core_functions.h src/core/P2P_proto_packet.h src/p2p_server/p2p_server.cpp src/p2p_server/p2p_server.h)
+        src/core/core_functions.cpp src/core/core_functions.h src/core/P2P_proto_packet.h)
 add_executable(${BUILD_CLIENT} ${SOURCE_FILES_CLIENT})
 
 set(BUILD_P2P_SERVER p2p_server)

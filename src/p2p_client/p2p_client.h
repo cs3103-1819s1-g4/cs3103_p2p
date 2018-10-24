@@ -7,8 +7,6 @@
 #include <WS2tcpip.h>
 
 #include "../core/core_functions.h"
-#include "../core/P2P_proto_packet.h"
-
 
 #define DEFAULT_TRACKER_PORT "80"
 #define DEFAULT_P2P_SERVER_PORT "6881"
@@ -20,11 +18,11 @@ class p2p_client {
 
 private:
     bool online;
-    char *tracker_ip;
+    const char *tracker_ip;
     uint32_t client_ip;
 public:
     // Constructor
-    explicit p2p_client(char *tracker_ip): online{true}, tracker_ip{tracker_ip} {
+    explicit p2p_client(const char *tracker_ip): online{true}, tracker_ip{tracker_ip} {
 
         /*TODO: To get client's private IP
         IN_ADDR temp{};
@@ -39,11 +37,11 @@ public:
     void display_menu();
 
     // These functions are ONLY for p2p_client and tracker communication
-    int connect_to_tracker(char *tracker_ip, char *tracker_port);
+    void connect_to_tracker(const char *tracker_ip, char *tracker_port);
     void query_list_of_files(char *tracker_port);
     void query_file(char *tracker_port, string filename);
 
-    // These functions are involved in p2p_client and p2p_server communication
+    // These functions are involved p2p_client and p2p_server communication
 //    void download_file(char *tracker_port, char *p2p_server_port);
 //    void upload_file(char *tracker_port);
 
