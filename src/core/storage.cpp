@@ -1,8 +1,5 @@
 // storage.cpp
 #include "storage.h"
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <windows.h>
 
 Storage::Storage(std::string pathToDownloadFolder) {
     this->pathToDownloadFolder = pathToDownloadFolder;
@@ -20,6 +17,8 @@ Storage::Storage(std::string pathToDownloadFolder) {
 }
 
 int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::string filename) {
+    std::lock_guard<std::mutex> guard(myMutex);
+
     int numOfCharInChunk = (count * size) / sizeof(char);
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
     std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
@@ -161,6 +160,8 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename) {
 
 int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int chunkNumber,
                       size_t *chunkTotalByteSize) {
+    std::lock_guard<std::mutex> guard(myMutex);
+
     if (chunkNumber <= 0) {
         // chunk number should be more than 0
         lastError = "Chunk number should be more than 0";
@@ -259,11 +260,15 @@ bool Storage::doesFileExist(const std::string &name) {
 }
 
 bool Storage::addFileToDownloadFolder(std::string pathToFile, std::string fileName) {
+    std::lock_guard<std::mutex> guard(myMutex);
+
     std::string pathToFileInDownloadFolder = pathToDownloadFolder + "\\" + fileName;
     return CopyFile(pathToFile.c_str(), pathToFileInDownloadFolder.c_str(), FALSE);
 }
 
 int Storage::getFinalChunkNumber(std::string fileName) {
+    std::lock_guard<std::mutex> guard(myMutex);
+
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + fileName;
     if (!doesFileExist(pathToFileCompleted)) {
         lastError = "Fully Downloaded file does not exist";
@@ -287,6 +292,8 @@ int Storage::getFinalChunkNumber(std::string fileName) {
 }
 
  int Storage::getArrOfChunkNumbers(int * buf, size_t maxElements, std::string filename){
+     std::lock_guard<std::mutex> guard(myMutex);
+
      std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
      std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
 
@@ -346,20 +353,20 @@ int main() {
     //stor->addFileToDownloadFolder("C:\\Users\\Jonathan Weng\\CLionProjects\\cs3103_p2p\\cmake-build-debug\\downloads\\mygit.exe", "mygi");
     //std::cout<<stor->getFinalChunkNumber("2.txt");
 
-    int finNo = stor->getFinalChunkNumber("test3.out");
+    int finNo = stor->getFinalChunkNumber("test2.out");
     if(finNo>0){
         std::cout<< "fino: " << finNo << std::endl;
     } else {
         std::cout<<stor->getLastError() << std::endl;
     }
     int myarr[1000];
-    int chunNo = stor->getArrOfChunkNumbers(myarr, 1000, "test3.out");
+    int chunNo = stor->getArrOfChunkNumbers(myarr, 1000, "test2.out");
     if(chunNo>0){
         std::cout<< "chunno: "<< chunNo << std::endl;
-//        int j;
-//        for(j=0;j<chunNo;j++){
-//            std::cout << myarr[j] << std::endl;
-//        }
+    //        int j;
+    //        for(j=0;j<chunNo;j++){
+    //            std::cout << myarr[j] << std::endl;
+    //        }
     } else {
         std::cout<< "lasterror: " << stor->getLastError() << std::endl;
     }
@@ -376,10 +383,10 @@ int main() {
     int i;
     while (1) {
         i = 1 + rand() % 1000;
-        int work = stor->getChunk(temp, "test3.out", i, chunkSizeRecieved);
+        int work = stor->getChunk(temp, "test2.out", i, chunkSizeRecieved);
         if (work != -1) {
             // total chunk size includes the size of the chunk header + size of chunk content
-            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test6.out");
+            stor->saveChunk(temp, sizeof(char), totalChunkSize, "test8.out");
         }
     }
     return 0;
