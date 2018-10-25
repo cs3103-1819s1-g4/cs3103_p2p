@@ -32,7 +32,6 @@ public:
         assert(file_name_len > 0 && file_name_len < 256);
 
         try {
-            //DOES NOT WORK
 //            this->file_name_len = (uint8_t) (file_name_len + 1);
 //            this->file_name = (char *)malloc(this->file_name_len);
 //            strcpy_s(this->file_name, file_name_len, file_name);
