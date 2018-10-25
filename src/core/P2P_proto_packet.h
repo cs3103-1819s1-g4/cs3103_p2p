@@ -48,7 +48,7 @@ public:
             , uint8_t chunk_no, uint32_t saddr) {
 
         assert((flag > 0 && flag < 5) || flag == 7);
-        assert(file_name_len > 0 && file_name_len < FILE_NAME_LEN);
+        assert(file_name_len > 0 && file_name_len < FILE_NAME_LEN); // leave a space for '\0'
 
         try {
             strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
