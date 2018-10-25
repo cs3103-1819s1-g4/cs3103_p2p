@@ -9,6 +9,7 @@
 #include <winsock.h>
 #include <string>
 #include "../core/core_functions.h"
+#include "../core/tracker_entries.h"
 
 #pragma comment(lib, "Mswsock.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -25,6 +26,9 @@ private:
     const char *port;
     IN_ADDR server_ip;
     WSADATA wsa;
+    vector<tracker_peer_list*> peer_list;
+    vector<tracker_file_list*> file_list;
+
 public:
 
     tracker(const char *port): port(port) {
@@ -40,12 +44,13 @@ public:
 
     };
     void init();
-    string addEntry(string message);
+    string addEntry(string message,string ip,int port);
     string addFile(string message);
     string query(string message);
     string generateList(string message);
     string updateIP(string message);
     string deleteIP(string message);
+    tracker_peer_list* createDummyEntry();
     void listen();
     void quit();
 
