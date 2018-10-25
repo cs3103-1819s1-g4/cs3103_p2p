@@ -1,32 +1,34 @@
 #ifndef CS3103_P2P_TRACKER_ENTRIES_H
 #define CS3103_P2P_TRACKER_ENTRIES_H
 
-/**
- * This header file contains the 2 types of entries a tracker has - file and client
- */
 #include <assert.h>
 #include <cstdint>
 #include <iostream>
 
+class tracker_peer_list {
 
-class TrackerClientEntry {
 private:
+
     uint8_t file_name_len;
     char *file_name;
     uint8_t chunk_no;
     uint32_t public_IP;
     uint16_t port_no;
+
 public:
     /**
      * constructor for client entry in tracker
      * @param filename_len
+     * @param file_name
      * @param chunk_no
      * @param public_IP
      * @param port_no
      */
-    TrackerClientEntry(uint8_t file_name_len, char *file_name, uint8_t chunk_no, uint32_t public_IP
+    tracker_peer_list(uint8_t file_name_len, char *file_name, uint8_t chunk_no, uint32_t public_IP
             , uint16_t port_no) {
+
         assert(file_name_len > 0 && file_name_len < 256);
+
         try {
             this->file_name_len = (uint8_t) (file_name_len + 1);
             this->file_name = (char *)malloc(this->file_name_len);
@@ -42,9 +44,9 @@ public:
     };
 
     /**
-     * deconstructor for client entry in tracker
+     * Deconstructor for client entry in tracker
      */
-    ~TrackerClientEntry() {
+    ~tracker_peer_list() {
         if(file_name != nullptr)
             free(file_name);
     };
@@ -53,59 +55,47 @@ public:
      * Getters for attributes in entry
      * @return attribute
      */
-    uint8_t get_file_name_len() {
-        return this->file_name_len;
-    }
+    uint8_t get_file_name_len();
 
-    char* get_file_name_ptr() {
-        return this->file_name;
-    }
+    char* get_file_name_ptr();
 
-    uint8_t get_chunk_no() {
-        return this->chunk_no;
-    }
+    uint8_t get_chunk_no();
 
-    uint32_t get_public_IP() {
-        return this->public_IP;
-    }
+    uint32_t get_public_IP();
 
-    uint16_t get_port_no() {
-        return this->port_no;
-    }
+    uint16_t get_port_no();
 
-    /**
-     * Print client entry
-     */
-    void print_entry() {
-        std::cout << file_name << "\t" << chunk_no << "\t" << public_IP << "\t" << port_no << "\n";
-    };
+    void print_peer_list_entry();
+
 };
 
-class TrackerFileEntry {
+class tracker_file_list {
 private:
     uint8_t file_name_len;
     char *file_name;
+    uint32_t no_of_chunks;
 public:
-    TrackerFileEntry(uint8_t file_name_len, char *file_name) {
+    tracker_file_list(uint8_t file_name_len, char *file_name, uint32_t no_of_chunks) {
         assert(file_name_len > 0 && file_name_len < 256);
         try {
             this->file_name_len = (uint8_t) (file_name_len + 1);
             this->file_name = (char *)malloc(this->file_name_len);
             strcpy_s(file_name, file_name_len, file_name);
             this->file_name[file_name_len] = '\0';
+            this->no_of_chunks = no_of_chunks;
 
         } catch (std::exception &e) {
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
         }
     };
 
-    ~TrackerFileEntry() {
+    ~tracker_file_list() {
         if(file_name != nullptr)
             free(file_name);
     };
 
-    void print_entry() {
-        std::cout << file_name << "\t" << file_name_len;
-    }
+    void print_file_list_entry();
+
 };
+
 #endif //CS3103_P2P_TRACKER_ENTRIES_H

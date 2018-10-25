@@ -27,12 +27,12 @@ void p2p_client::display_menu() {
 
 }
 
-int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
+void p2p_client::connect_to_tracker(const char *tracker_ip, char *tracker_port) {
 
     iresult = WSAStartup(MAKEWORD(2,2), &wsa_data);
     if (iresult != 0) {
         printf("WSAStartup failed with error: %d\n", iresult);
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     ZeroMemory( &hints, sizeof(hints) );
@@ -44,7 +44,7 @@ int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
     if ( iresult != 0 ) {
         printf("getaddrinfo failed with error: %d\n", iresult);
         WSACleanup();
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     for(ptr=result; ptr != nullptr ; ptr=ptr->ai_next) {
@@ -54,7 +54,7 @@ int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
         if (connect_socket == INVALID_SOCKET) {
             printf("socket failed with error: %ld\n", WSAGetLastError());
             WSACleanup();
-            return 1;
+            exit(EXIT_FAILURE);
         }
         break;
     }
@@ -64,10 +64,8 @@ int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
     if (connect_socket == INVALID_SOCKET) {
         printf("Unable to connect to server!\n");
         WSACleanup();
-        return 1;
+        exit(EXIT_FAILURE);
     }
-
-    return 0;
 
 }
 

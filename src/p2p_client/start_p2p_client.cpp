@@ -3,7 +3,6 @@
 //
 
 // start_p2p_client starts the P2P client
-// Run the p2p_client by using "p2p_client <Tracker's IP>"
 
 #include <iostream>
 #include <cstdio>
@@ -19,17 +18,15 @@ int main() {
 
     string tracker_ip_string;
 
-    std::cout << "#################### Welcome to P2P client ####################\n"
+    cout << "#################### Welcome to P2P client ####################\n"
                  "\nEnter Tracker's IP address: ";
     cin >> tracker_ip_string;
 
-    auto *tracker_ip = new char[tracker_ip_string.length() + 1];
-    strcpy(tracker_ip, tracker_ip_string.c_str());
+    const char *tracker_ip = tracker_ip_string.c_str();
 
     int user_option;
     p2p_client client(tracker_ip);
 
-    free(tracker_ip);
     do {
         client.display_menu();
         user_option = execute_user_option(client);
