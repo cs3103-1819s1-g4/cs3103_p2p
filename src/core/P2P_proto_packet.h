@@ -15,17 +15,17 @@ using namespace std;
 
 static const char REQUEST_TYPE_FIELD[] = "REQUEST\0";
 static const char RESPONSE_TYPE_FIELD[] = "RESPONSE\0";
+const int FILE_NAME_LEN = 256;
 
 /**
- * There are 2 default constructors for P2P request packet as 1 has variable length while the other has
- * fixed length.
+ * There are 2 constructors for P2P request packet
  */
 struct P2P_request_pkt {
 public:
     char type[REQUEST_TYPE_FIELD_LEN];
     uint8_t flag;
     uint8_t file_name_len; // in bytes
-    char file_name[256];
+    char file_name[FILE_NAME_LEN];
     uint8_t chunk_no;
     uint32_t saddr;
 
@@ -48,13 +48,14 @@ public:
             , uint8_t chunk_no, uint32_t saddr) {
 
         assert((flag > 0 && flag < 5) || flag == 7);
-        assert(file_name_len > 0);   // leave a space for '\0'
+        assert(file_name_len > 0 && file_name_len < FILE_NAME_LEN); // leave a space for '\0'
 
         try {
             strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
             this->flag = flag;
             this->file_name_len = file_name_len;
             strcpy_s(this->file_name, this->file_name_len, file_name);
+            this->file_name[file_name_len] = '\0';
             this->chunk_no = chunk_no;
             this->saddr = saddr;
 
@@ -78,7 +79,7 @@ public:
             strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
             this->flag = flag;
             this->file_name_len = 0;
-            memset(file_name, '0', sizeof(file_name));
+            memset(file_name, '\0', sizeof(file_name));
             this->chunk_no = NULL;
             this->saddr = saddr;
 

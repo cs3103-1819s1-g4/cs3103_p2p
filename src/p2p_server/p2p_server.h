@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const char FILE_NOT_FOUND_ERROR[] = "FILE NOT FOUND";
+const char CHUNK_NOT_FOUND_ERROR[] = "CHUNK NOT FOUND";
 const int MAX_BUFFER_LEN = 2048;
 
 class P2P_Server {
@@ -41,7 +41,6 @@ public:
         recv_buffer = (char *)malloc(MAX_BUFFER_LEN);
         send_buffer = (char *)malloc(FIXED_CHUNK_CONTENT_SIZE);
         chunk_buffer = (char *)malloc(FIXED_CHUNK_SIZE);
-        //CreateDirectory(PATH_TO_STORAGE_DIRECTORY, nullptr);
     };
 
     /**

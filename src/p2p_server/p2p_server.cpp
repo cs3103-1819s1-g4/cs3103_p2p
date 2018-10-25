@@ -120,7 +120,7 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
              << ntohs(client_addr.sin_port) << "\n";
 
     } else {
-        strcpy_s(send_buffer, sizeof(FILE_NOT_FOUND_ERROR), FILE_NOT_FOUND_ERROR);
+        strcpy_s(send_buffer, sizeof(CHUNK_NOT_FOUND_ERROR), CHUNK_NOT_FOUND_ERROR);
 
         if (sendto(listen_sock, send_buffer, strlen(send_buffer), 0, (sockaddr *) &client_addr, sin_size) ==
             SOCKET_ERROR) {
