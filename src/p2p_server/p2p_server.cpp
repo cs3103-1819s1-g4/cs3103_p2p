@@ -22,7 +22,7 @@ bool P2P_Server::start(const char *port) {
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
 
-    status = getaddrinfo(inet_ntoa(p2p_server_ip), port, &hints, &result);
+    status = getaddrinfo(inet_ntoa(p2p_server_private_ip), port, &hints, &result);
     if (status != 0) {
         std::cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
         return false;
@@ -131,3 +131,66 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
     }
     return true;
 }
+
+bool P2P_Server::get_public_ip_stun() {
+
+    WSADATA wsock;
+    int status = WSAStartup(MAKEWORD(2,2),&wsock);
+
+    if ( status != 0)
+        cout << "[ERROR]: " << status << " Unable to start Winsock.\n";
+
+    /* Variables for iterating */
+    string stun_serv_ip, stun_serv_port;
+
+    /* Variables for choosing STUN server */
+    struct addrinfo *result = nullptr, *ptr = nullptr,
+            stun_serv_addr{};
+    SOCKET sock{};
+    bool chosen = false;
+
+    ZeroMemory(&result, sizeof(result));
+    ZeroMemory(&stun_serv_addr, sizeof(stun_serv_addr));
+    stun_serv_addr.ai_family = AF_INET;
+    stun_serv_addr.ai_socktype = SOCK_DGRAM;
+    stun_serv_addr.ai_protocol = IPPROTO_UDP;
+
+    for(auto it : STUN_SERV_VECTOR) {
+       stun_serv_ip = it.first;
+       stun_serv_port = it.second;
+       status = getaddrinfo(stun_serv_ip.c_str(), stun_serv_port.c_str(), &stun_serv_addr, &result);
+       if(status == 0) {
+           chosen = true;
+           break;
+       }
+    }
+
+    if(!chosen) {
+        cout << "All stun servers were invalid, try other servers instead" << "\n";
+        return false;
+    }
+
+    chosen = false;
+    for(ptr=result; ptr != nullptr ; ptr=ptr->ai_next) {
+
+        sock = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+        if (sock != INVALID_SOCKET) {
+            chosen = true;
+            break;
+        }
+    }
+
+    if(!chosen) {
+        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to create socket for stun server.\n";
+        freeaddrinfo(result);
+        return false;
+    }
+
+    print_server((struct sockaddr_in *)result->ai_addr, stun_serv_port, "Connecting to stun server");
+    cout.flush();
+
+    freeaddrinfo(result);
+    stun_sock = sock;
+
+    return true;
+};
