@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-class tracker_peer_list {
+class tracker_peer_list_entry {
 
 private:
 
@@ -26,7 +26,7 @@ public:
      * @param public_IP
      * @param port_no
      */
-    tracker_peer_list(uint8_t file_name_len, char *file_name, uint8_t chunk_no, uint8_t public_IP_len,
+    tracker_peer_list_entry(uint8_t file_name_len, char *file_name, uint8_t chunk_no, uint8_t public_IP_len,
             char * public_IP, uint16_t port_no) {
 
         assert(file_name_len > 0 && file_name_len < 256);
@@ -51,7 +51,7 @@ public:
     /**
      * Deconstructor for client entry in tracker
      */
-    ~tracker_peer_list() {
+    ~tracker_peer_list_entry() {
         if(file_name != nullptr)
             free(file_name);
     };
@@ -75,13 +75,13 @@ public:
     std::string generate_message();
 };
 
-class tracker_file_list {
+class tracker_file_list_entry {
 private:
     uint8_t file_name_len;
     char *file_name;
     uint32_t no_of_chunks;
 public:
-    tracker_file_list(uint8_t file_name_len, char *file_name, uint32_t no_of_chunks) {
+    tracker_file_list_entry(uint8_t file_name_len, char *file_name, uint32_t no_of_chunks) {
         assert(file_name_len > 0 && file_name_len < 256);
         try {
             this->file_name_len = (uint8_t) (file_name_len + 1);
@@ -95,7 +95,7 @@ public:
         }
     };
 
-    ~tracker_file_list() {
+    ~tracker_file_list_entry() {
         if(file_name != nullptr)
             free(file_name);
     };
