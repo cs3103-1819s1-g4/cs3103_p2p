@@ -92,17 +92,16 @@ public:
 
 
 /**
- * Have to be declare using the following: P2P_response_pkt<T> name
- * @tparam T
+ *
  */
 template <typename T>
-struct P2P_response_pkt {
+struct p2p_response_pkt {
 public:
     char type[RESPONSE_TYPE_FIELD_LEN];
     uint8_t list_len;
     vector<T> entry_list;
 
-    P2P_response_pkt(uint8_t list_len, vector<T> list) {
+    p2p_response_pkt(uint8_t list_len, vector<T> list) {
         assert(list_len > 0);
 
         strcpy_s(this->type, RESPONSE_TYPE_FIELD_LEN, RESPONSE_TYPE_FIELD);
