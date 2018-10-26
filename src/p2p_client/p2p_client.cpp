@@ -113,13 +113,14 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
 
     this->connect_to_tracker(this->tracker_ip, tracker_port);
 
-    Storage storage("./download");
+    Storage storage("..\\download");
     int chunk_no_buffer[2048]; // TODO: assuming maximum number of files a file can have is 2048
     int num_of_chunks = storage.getArrOfChunkNumbers(chunk_no_buffer, 2048, filename);
 
-    for (auto chunk_no = 1; chunk_no < num_of_chunks; chunk_no++) {
+    for (auto chunk_no = 1; chunk_no < num_of_chunks+1; chunk_no++) {
         p2p_request request_pkt(4, filename, chunk_no, ""); // TODO: Serializable?
         strcpy_s(sendbuf, sizeof(request_pkt), (char *)&request_pkt);
+        cout << sendbuf << '\n';
         sendto(connect_socket, sendbuf, sizeof(sendbuf), 0, ptr->ai_addr, ptr->ai_addrlen );
     }
 
