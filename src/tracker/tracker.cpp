@@ -128,7 +128,7 @@ void tracker::listen() {
 
         //Sample reply
         reply = "RESPONSE ";
-        peer_list.push_back(new tracker_peer_list(5,"hello",3,9,"127.0.0.1",80));
+        peer_list.push_back(new tracker_peer_list_entry(5,"hello",3,9,"127.0.0.1",80));
 
         strcpy(buf,reply.c_str());
         strcat(buf,peer_list[0]->generate_message().c_str());
@@ -163,9 +163,9 @@ string tracker::updateIP(string message){
 string tracker::deleteIP(string message){
     return 0;
 }
-tracker_peer_list* tracker::createDummyEntry(){
+tracker_peer_list_entry* tracker::createDummyEntry(){
 
-    tracker_peer_list* test = new tracker_peer_list(5,"hello",3,9,"127.0.0.1",80);
+    tracker_peer_list_entry* test = new tracker_peer_list_entry(5,"hello",3,9,"127.0.0.1",80);
     printf("able to create entry");
     return test;
 

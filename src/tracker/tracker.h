@@ -26,8 +26,8 @@ private:
     const char *port;
     IN_ADDR server_ip;
     WSADATA wsa;
-    vector<tracker_peer_list*> peer_list;
-    vector<tracker_file_list*> file_list;
+    vector<tracker_peer_list_entry*> peer_list;
+    vector<tracker_file_list_entry*> file_list;
 
 public:
 
@@ -50,7 +50,7 @@ public:
     string generateList(string message);
     string updateIP(string message);
     string deleteIP(string message);
-    tracker_peer_list* createDummyEntry();
+    tracker_peer_list_entry* createDummyEntry();
     void listen();
     void quit();
 

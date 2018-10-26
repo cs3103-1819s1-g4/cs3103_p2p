@@ -1,9 +1,11 @@
+// TODO: in p2p_server, switch to using p2p_request.h, instead of p2p_request_response_pakcet.h
+
 #ifndef CS3103_P2P_P2P_SERVER_H
 #define CS3103_P2P_P2P_SERVER_H
 
 #include <WS2tcpip.h>
 #include "../core/core_functions.h"
-#include "../core/P2P_proto_packet.h"
+#include "../core/p2p_request_response_packet.h"
 #include "../core/storage.h"
 
 #define PATH_TO_STORAGE_DIRECTORY "..\\src\\p2p_server\\files_for_seeding"
