@@ -45,12 +45,11 @@ public:
     };
     void init();
     string addEntry(string message,string ip,int port);
-    string addFile(string message);
+    string addFile(string message,string ip,int port);
     string query(string message);
-    string generateList(string message);
+    string generateList(string message,string ip,int port);
     string updateIP(string message);
     string deleteIP(string message);
-    tracker_peer_list_entry* createDummyEntry();
     void listen();
     void quit();
 
