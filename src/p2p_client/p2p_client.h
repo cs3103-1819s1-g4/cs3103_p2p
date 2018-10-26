@@ -43,7 +43,7 @@ public:
 
     // These functions are involved p2p_client and p2p_server communication
 //    void download_file(char *tracker_port, char *p2p_server_port);
-//    void upload_file(char *tracker_port);
+    void upload_file(char *tracker_port, string filename);
 
     void quit();
 

@@ -33,7 +33,7 @@ FLAG VALUES (values from 1 to 7)
 . Download a file from the swarm. FILENAME value must be filled.
 . Ask the tracker for the updated list. FILENAME must be filled.
 . Inform the tracker that a chunk has been successfully downloaded. FILENAME and CHUNK NO must be filled.
-. Upload a new file. FILENAME, CHUNK NO and IP ADDRESS must be filled.
+. Upload a new file. FILENAME, CHUNK NO must be filled.
 . Exit from swarm. IP ADDRESS must be filled.
 . Query the tracker for a list of files available.
 . Query for a specified file. FILENAME must be filled.
