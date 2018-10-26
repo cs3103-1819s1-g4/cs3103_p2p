@@ -100,7 +100,7 @@ void tracker::listen() {
                 break;
                 //Upload a new file. FILENAME, CHUNK NO and IP ADDRESS must be filled.
             case 4:
-                //addFile(message);
+                addFile(message,inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port)) ;
                 printf("Adding list of entry from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Exit from swarm. IP ADDRESS must be filled.
@@ -110,7 +110,7 @@ void tracker::listen() {
                 break;
                 //Query the tracker for a list of files available.
             case 6:
-                reply = query(message);
+                //reply = query(message);
                 printf("Replying query from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Query for a specified file. FILENAME must be filled.
@@ -125,13 +125,12 @@ void tracker::listen() {
                 break;
         }
 
+        //peer_list[0]->print_peer_list_entry();
 
         //Sample reply
         reply = "RESPONSE ";
-        peer_list.push_back(new tracker_peer_list(5,"hello",3,9,"127.0.0.1",80));
 
         strcpy(buf,reply.c_str());
-        strcat(buf,peer_list[0]->generate_message().c_str());
         printf("%s\n",buf);
         // TODO: Stop tracker from crashing when attempting to send
         if (sendto(listen_sock, buf, recv_len, 0, (struct sockaddr*) &si_other, slen) == SOCKET_ERROR)
@@ -146,15 +145,55 @@ void tracker::listen() {
 
 }
 string tracker::addEntry(string message,string ip,int port){
-    return 0;
+    //extract from message
+    string fileName = "DummyFile";
+    uint32_t chunkNo = 10;
+
+    peer_list.emplace_back( new tracker_peer_list_entry(fileName,chunkNo,ip,port));
+
+    bool exist = false;
+    for(auto &i: file_list) {
+        if(fileName == ((tracker_file_list_entry*) i)->get_file_name()) {
+            if((int) i->get_no_of_chunk() > chunkNo)
+            {
+                i->set_no_of_chunk(chunkNo);
+            }
+            exist = true;
+        }
+    }
+    if(!exist) {
+        file_list.emplace_back(new tracker_file_list_entry(fileName,chunkNo));
+    }
+
+    return "";
 }
-string tracker::addFile(string message){
-    return 0;
+string tracker::addFile(string message,string ip,int port){
+    //extract from message
+    string fileName = "DummyFile";
+    uint32_t chunkNo = 10;
+
+    peer_list.emplace_back( new tracker_peer_list_entry(fileName,chunkNo,ip,port));
+
+    bool exist = false;
+    for(auto &i: file_list) {
+        if(fileName == ((tracker_file_list_entry*) i)->get_file_name()) {
+            if((int) i->get_no_of_chunk() > chunkNo)
+            {
+                i->set_no_of_chunk(chunkNo);
+            }
+            exist = true;
+        }
+    }
+    if(!exist) {
+        file_list.emplace_back(new tracker_file_list_entry(fileName,chunkNo));
+    }
+
+    return "";
 }
 string tracker::query(string message){
     return "Hello";
 }
-string tracker::generateList(string message){
+string tracker::generateList(string message,string ip,int port){
     return 0;
 }
 string tracker::updateIP(string message){
@@ -162,11 +201,4 @@ string tracker::updateIP(string message){
 }
 string tracker::deleteIP(string message){
     return 0;
-}
-tracker_peer_list* tracker::createDummyEntry(){
-
-    tracker_peer_list* test = new tracker_peer_list(5,"hello",3,9,"127.0.0.1",80);
-    printf("able to create entry");
-    return test;
-
 }
