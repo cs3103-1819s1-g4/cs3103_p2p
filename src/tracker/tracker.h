@@ -24,7 +24,7 @@ using namespace std;
 class tracker {
 private:
     const char *port;
-    IN_ADDR server_ip;
+    in_addr server_ip;
     WSADATA wsa;
     vector<tracker_peer_list_entry*> peer_list;
     vector<tracker_file_list_entry*> file_list;

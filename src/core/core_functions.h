@@ -16,7 +16,7 @@ using namespace std;
 
 const int Q_LEN = 100;
 
-void get_private_IP(IN_ADDR &IP);
+void get_private_IP(in_addr &IP);
 void print_server(struct sockaddr_in *addr, string port, string server);
 
 /**

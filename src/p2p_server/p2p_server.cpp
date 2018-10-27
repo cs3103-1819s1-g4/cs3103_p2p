@@ -132,6 +132,7 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
     return true;
 }
 
+/* 1 socket for public ip, 1 socket for private ip? */
 bool P2P_Server::get_public_ip_stun() {
 
     WSADATA wsock;
@@ -141,25 +142,25 @@ bool P2P_Server::get_public_ip_stun() {
         cout << "[ERROR]: " << status << " Unable to start Winsock.\n";
 
     /* Variables for iterating */
-    string stun_serv_ip, stun_serv_port;
+    string stun_serv_ip;
+    uint16_t stun_serv_port = NULL;
 
-    /* Variables for choosing STUN server */
-    struct addrinfo *result = nullptr, *ptr = nullptr,
-            stun_serv_addr{};
-    SOCKET sock{};
+    /* Variables to communicate with STUN server */
+    struct sockaddr_in stun_serv_addr{};
     bool chosen = false;
+    STUN_Pkt_Handler stun_pkt_handler;
+    unsigned char stun_pkt[STUN_PKT_LEN];
+    int bytes_recv;
 
-    ZeroMemory(&result, sizeof(result));
     ZeroMemory(&stun_serv_addr, sizeof(stun_serv_addr));
-    stun_serv_addr.ai_family = AF_INET;
-    stun_serv_addr.ai_socktype = SOCK_DGRAM;
-    stun_serv_addr.ai_protocol = IPPROTO_UDP;
+    stun_serv_addr.sin_family = AF_INET;
 
     for(auto it : STUN_SERV_VECTOR) {
        stun_serv_ip = it.first;
        stun_serv_port = it.second;
-       status = getaddrinfo(stun_serv_ip.c_str(), stun_serv_port.c_str(), &stun_serv_addr, &result);
-       if(status == 0) {
+       status = inet_pton(AF_INET, stun_serv_ip.c_str(), &stun_serv_addr.sin_addr);
+        // Check if STUN ip address is valid
+        if(status == 1) {
            chosen = true;
            break;
        }
@@ -170,27 +171,43 @@ bool P2P_Server::get_public_ip_stun() {
         return false;
     }
 
-    chosen = false;
-    for(ptr=result; ptr != nullptr ; ptr=ptr->ai_next) {
+    stun_serv_addr.sin_port = htons(stun_serv_port);
 
-        sock = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-        if (sock != INVALID_SOCKET) {
-            chosen = true;
-            break;
-        }
-    }
+    // Create first bind packet
+    stun_pkt_handler.create_first_bind_pkt(stun_pkt);
 
-    if(!chosen) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to create socket for stun server.\n";
-        freeaddrinfo(result);
+    print_server(&stun_serv_addr, to_string(stun_serv_port), "Attempting to communicate with stun server");
+    cout.flush();
+
+    // Send stun packet
+    if(sendto(listen_sock, (char *)stun_pkt, sizeof(stun_pkt), 0, (struct sockaddr *)&stun_serv_addr, sizeof(stun_serv_addr))
+            == SOCKET_ERROR) {
+        cout << "[ERROR]: " << WSAGetLastError() << "\tSend to socket failed\n";
+        closesocket(listen_sock);
+        WSACleanup();
         return false;
     }
 
-    print_server((struct sockaddr_in *)result->ai_addr, stun_serv_port, "Connecting to stun server");
-    cout.flush();
+    Sleep(1);
 
-    freeaddrinfo(result);
-    stun_sock = sock;
+    if((bytes_recv = recvfrom(listen_sock, recv_buffer, MAX_BUFFER_LEN, 0, nullptr, nullptr)) == SOCKET_ERROR) {
+        std::cout << "[ERROR]: " << WSAGetLastError() << "\tReceive at socket failed\n";
+        closesocket(listen_sock);
+        WSACleanup();
+        return false;
+    }
+
+    recv_buffer[bytes_recv] = '\0';
+
+    if((p2p_server_public_port = stun_pkt_handler.parse_request(recv_buffer, bytes_recv, &p2p_server_public_ip)) == 0) {
+        cout << "Stun request binding failed\n";
+        closesocket(listen_sock);
+        WSACleanup();
+        return false;
+    }
+
+    cout << "P2P client server's public ip:port is " << inet_ntoa(p2p_server_public_ip) << ":"
+    << to_string(p2p_server_public_port) << "\n";
 
     return true;
 };
