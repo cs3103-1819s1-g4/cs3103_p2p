@@ -148,7 +148,7 @@ bool P2P_Server::get_public_ip_stun() {
     /* Variables to communicate with STUN server */
     struct sockaddr_in stun_serv_addr{};
     bool chosen = false;
-    STUN_Pkt_Handler stun_pkt_handler;
+    Stun_Pkt_Handler stun_pkt_handler;
     unsigned char stun_pkt[STUN_PKT_LEN];
     int bytes_recv;
 
