@@ -4,7 +4,7 @@
 #include <bcrypt.h>
 #include <cstdio>
 #include <iostream>
-#include <windows.h>
+#include <Windows.h>
 
 #pragma comment(lib, "Bcrypt")
 
@@ -16,6 +16,8 @@ const int RESPONSE_FIRST_ATTR_POS = 20;
 const unsigned char ATTR_TYPE_MAPPED_ADDR[] = {0x00,0x01};
 
 // TODO: Rebinding after public ip expire
+// TODO: Find another crypto library, Bcrypt dependencies on latest windows SDK is troublesome
+
 class STUN_Pkt_Handler {
 private:
     BCRYPT_ALG_HANDLE h_provider;
