@@ -13,7 +13,7 @@ uint16_t STUN_Pkt_Handler::parse_request(T *pkt, int pkt_size, in_addr *public_i
 
     auto *response_req_id = new unsigned char[REQUEST_ID_LEN];
     short cur_attr_type;
-    int total_attr_size, cur_attr_size;
+    int cur_attr_size;
     uint16_t port = 0;
     string public_ip_str;
 
@@ -37,19 +37,12 @@ uint16_t STUN_Pkt_Handler::parse_request(T *pkt, int pkt_size, in_addr *public_i
             return 0;
         }
 
-        // Extract size of response pkt without header
-        total_attr_size = pkt[2] * 256 + pkt[3];
-        if(total_attr_size < 4) {
-            cout << "Length of all attributes too short.\n";
-            return 0;
-        }
-
         // Iterate through attributes in response packet
         for(int i=RESPONSE_FIRST_ATTR_POS ; i<pkt_size; ) {
 
             // Extract length of attribute
-            cur_attr_size = pkt[i+2]*256 + pkt[i+3];
-            cur_attr_type = htons(*(uint16_t *)(&pkt[i]));
+            cur_attr_size = htons(*(u_short *)(&pkt[i+2]));
+            cur_attr_type = htons(*(u_short *)(&pkt[i]));
 
             // If attribute is of 'xor-mapped-address'
             if(cur_attr_type == 0x0020) {
