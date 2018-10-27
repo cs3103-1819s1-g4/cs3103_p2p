@@ -20,7 +20,7 @@ class MainServer {
 private:
     bool online;
     SOCKET listen_sock;
-    IN_ADDR server_ip;
+    in_addr server_ip;
 public:
     /**
      * Constructor for Main Server

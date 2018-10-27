@@ -7,6 +7,7 @@
 #include "../core/core_functions.h"
 #include "../core/p2p_request_response_packet.h"
 #include "../core/storage.h"
+#include "stun_pkt_handler.h"
 
 #define PATH_TO_STORAGE_DIRECTORY "..\\src\\p2p_server\\files_for_seeding"
 
@@ -19,17 +20,18 @@ class P2P_Server {
 private:
     bool online;
     SOCKET listen_sock;
-    IN_ADDR p2p_server_private_ip;
-    SOCKET stun_sock;
+    in_addr p2p_server_private_ip;
+    in_addr p2p_server_public_ip;
+    uint16_t p2p_server_public_port;
     char *recv_buffer;
     char *send_buffer;
     char *chunk_buffer;
     Storage storage;
-    vector< pair<string, string> > STUN_SERV_VECTOR {make_pair("stun.l.google.com", "19305"),
-                                                      make_pair("stun1.l.google.com", "19305"),
-                                                      make_pair("stun2.l.google.com", "19305"),
-                                                      make_pair("stun3.l.google.com", "19305"),
-                                                      make_pair("stun4.l.google.com", "19305")};
+    vector< pair<string, uint16_t> > STUN_SERV_VECTOR {make_pair("stun.l.google.com", 19305),
+                                                      make_pair("stun1.l.google.com", 19305),
+                                                      make_pair("stun2.l.google.com", 19305),
+                                                      make_pair("stun3.l.google.com", 19305),
+                                                      make_pair("stun4.l.google.com", 19305)};
 public:
     /**
      * Constructor for P2P server

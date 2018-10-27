@@ -25,7 +25,7 @@ public:
     explicit p2p_client(const char *tracker_ip): online{true}, tracker_ip{tracker_ip} {
 
         /*TODO: To get client's private IP
-        IN_ADDR temp{};
+        in_addr temp{};
         get_private_IP(temp);
         client_ip = temp.s_addr;
 
