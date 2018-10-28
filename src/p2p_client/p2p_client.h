@@ -9,7 +9,7 @@
 #include "../core/core_functions.h"
 
 #define DEFAULT_TRACKER_PORT "80"
-#define DEFAULT_P2P_SERVER_PORT "6881"
+#define DEFAULT_P2P_SERVER_PORT "6881" // this is not used when NAT is involved
 
 using namespace std;
 
@@ -36,13 +36,14 @@ public:
 
     void display_menu();
 
+    void connection(const char *tracker_ip, char *tracker_port);
+
     // These functions are ONLY for p2p_client and tracker communication
-    void connect_to_tracker(const char *tracker_ip, char *tracker_port);
     void query_list_of_files(char *tracker_port);
     void query_file(char *tracker_port, string filename);
 
     // These functions are involved p2p_client and p2p_server communication
-//    void download_file(char *tracker_port, char *p2p_server_port);
+    void download_file(char *tracker_port, string filename);
     void upload_file(char *tracker_port, string filename);
 
     void quit();
