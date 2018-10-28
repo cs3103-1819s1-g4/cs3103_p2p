@@ -33,7 +33,7 @@ FLAG VALUES (values from 1 to 7)
 . Download a file from the swarm. FILENAME value must be filled.
 . Ask the tracker for the updated list. FILENAME must be filled.
 . Inform the tracker that a chunk has been successfully downloaded. FILENAME and CHUNK NO must be filled.
-. Upload a new file. FILENAME, CHUNK NO must be filled.
+. Upload a new file. FILENAME, CHUNK NO must be filled. (eg. REQUEST 4 test.txt 1 test.txt 2 test.txt 3)
 . Exit from swarm. IP ADDRESS must be filled.
 . Query the tracker for a list of files available.
 . Query for a specified file. FILENAME must be filled.
@@ -58,7 +58,7 @@ Each P2P server will be running on TCP Port 6881.
 
 When Harry wants to download a file, he will obtain a list from tracker.
 
-At the start, he will simply choose a random chunk from a random peer to download.
+At the start, he will simply choose a random chunk from a random peer to download by sending "DOWNLOAD test.txt 1" message, for example.
 
 Next, he will choose which chunks he does not have yet and from these chunks, randomly download one from a random peer.
 
