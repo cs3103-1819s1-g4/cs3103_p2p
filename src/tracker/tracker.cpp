@@ -76,7 +76,6 @@ void tracker::listen() {
 
         int request = buf[8] - '0';
 
-
         std::string message(buf);
         //int pos = message.find("|") + 1;
         //printf("%s\n", message.substr(pos).c_str());
