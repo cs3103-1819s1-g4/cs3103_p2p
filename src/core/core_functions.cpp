@@ -64,7 +64,7 @@ void RecvBuffer::consumer(char *b) {
  * Can be edited find all the private IPs of the machine.
  * @param IP
  */
-void get_private_IP(IN_ADDR &IP) {
+void get_private_IP(in_addr &IP) {
 
     /* Variables used by GetIpAddrTable */
     PMIB_IPADDRTABLE localhost_IP_addr_table;

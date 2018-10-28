@@ -31,5 +31,6 @@ add_executable(${BUILD_CLIENT} ${SOURCE_FILES_CLIENT})
 
 set(BUILD_P2P_SERVER p2p_server)
 set(SOURCE_FILES_P2P_SERVER src/p2p_server/start_p2p_server.cpp src/p2p_server/p2p_server.cpp src/p2p_server/p2p_server.h src/core/p2p_request_response_packet.h
-        src/core/core_functions.cpp src/core/core_functions.h src/core/storage.h src/core/storage.cpp src/p2p_server/start_p2p_server.cpp src/core/p2p_request.cpp src/core/p2p_request.h)
+        src/core/core_functions.cpp src/core/core_functions.h src/core/storage.h src/core/storage.cpp src/p2p_server/start_p2p_server.cpp src/core/p2p_request.cpp src/core/p2p_request.h
+        src/p2p_server/stun_pkt_handler.cpp src/p2p_server/stun_pkt_handler.h)
 add_executable(${BUILD_P2P_SERVER} ${SOURCE_FILES_P2P_SERVER})
