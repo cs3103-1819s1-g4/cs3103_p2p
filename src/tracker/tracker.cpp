@@ -1,7 +1,7 @@
 //
 // Created by Core on 22/10/2018.
 //
-
+#include <algorithm>
 #include "tracker.h"
 #include "../core/tracker_entries.h"
 
@@ -84,37 +84,37 @@ void tracker::listen() {
         switch (request) {
             //Download a file from the swarm. FILENAME value must be filled.
             case 1:
-                //generateList(message);
+                reply = generateList(message);
                 printf("Generating List %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Ask the tracker for the updated list. FILENAME must be filled.
             case 2:
-                //generateList(message);
+                reply = generateList(message);
                 printf("Generating List %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Inform the tracker that a chunk has been successfully downloaded. FILENAME and CHUNK NO must be filled.
             case 3:
-                addEntry(message,inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port)) ;
+                reply = addEntry(message,inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port)) ;
                 //printf("Adding Entry from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Upload a new file. FILENAME, CHUNK NO and IP ADDRESS must be filled.
             case 4:
-                addFile(message,inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port)) ;
+                reply = addFile(message,inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port)) ;
                 printf("Adding list of entry from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Exit from swarm. IP ADDRESS must be filled.
             case 5:
-                //deleteIP(message);
+                reply = deleteIP(message);
                 printf("Deleting IP from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Query the tracker for a list of files available.
             case 6:
-                //reply = query(message);
+                reply = query();
                 printf("Replying query from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Query for a specified file. FILENAME must be filled.
             case 7:
-                reply = query(message);
+                reply = queryFile(message);
                 printf("Replying query from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
 
@@ -124,19 +124,16 @@ void tracker::listen() {
                 break;
         }
 
-        //peer_list[0]->print_peer_list_entry();
 
-        //Sample reply
-        reply = "RESPONSE ";
-
-        strcpy(buf,reply.c_str());
-        printf("%s\n",buf);
-        // TODO: Stop tracker from crashing when attempting to send
-        if (sendto(listen_sock, buf, recv_len, 0, (struct sockaddr*) &si_other, slen) == SOCKET_ERROR)
-        {
-            printf("sendto() failed with error code : %d" , WSAGetLastError());
+        if(reply.length() > 0) {
+            strcpy(buf, reply.c_str());
+            printf("%s\n", buf);
+            // TODO: Stop tracker from crashing when attempting to send
+            if (sendto(listen_sock, buf, strlen(buf), 0, (struct sockaddr *) &si_other, slen) == SOCKET_ERROR) {
+                printf("sendto() failed with error code : %d", WSAGetLastError());
+            }
         }
-
+        memset(buf, '\0', PACK_SIZE);
     }
 
     closesocket(listen_sock);
@@ -145,59 +142,104 @@ void tracker::listen() {
 }
 string tracker::addEntry(string message,string ip,int port){
     //extract from message
-    string fileName = "DummyFile";
-    uint32_t chunkNo = 10;
-
-    peer_list.emplace_back( new tracker_peer_list_entry(fileName,chunkNo,ip,port));
-
-    bool exist = false;
-    for(auto &i: file_list) {
-        if(fileName == ((tracker_file_list_entry*) i)->get_file_name()) {
-            if((int) i->get_no_of_chunk() > chunkNo)
-            {
-                i->set_no_of_chunk(chunkNo);
+    int current = 10, next;
+    next = message.find("|",current);
+    while(next != string::npos) {
+        peer_list.emplace_back(new tracker_peer_list_entry(message.substr(current, next),inet_ntoa(si_other.sin_addr),
+                                                           ntohs(si_other.sin_port)));
+        cout << "Added " << peer_list.back()->generate_message();
+        bool exist = false;
+        for (auto &i: file_list) {
+            if (peer_list.back()->get_file_name() == i->get_file_name()) {
+                if ((int) i->get_no_of_chunk() > peer_list.back()->get_chunk_no()) {
+                    i->set_no_of_chunk(peer_list.back()->get_chunk_no());
+                }
+                exist = true;
             }
-            exist = true;
         }
+        if (!exist) {
+            file_list.emplace_back(
+                    new tracker_file_list_entry(peer_list.back()->get_file_name(), peer_list.back()->get_chunk_no()));
+        }
+        current = next;
+        next = message.find("|",current);
     }
-    if(!exist) {
-        file_list.emplace_back(new tracker_file_list_entry(fileName,chunkNo));
-    }
-
     return "";
 }
 string tracker::addFile(string message,string ip,int port){
     //extract from message
-    string fileName = "DummyFile";
-    uint32_t chunkNo = 10;
-
-    peer_list.emplace_back( new tracker_peer_list_entry(fileName,chunkNo,ip,port));
-
-    bool exist = false;
-    for(auto &i: file_list) {
-        if(fileName == ((tracker_file_list_entry*) i)->get_file_name()) {
-            if((int) i->get_no_of_chunk() > chunkNo)
-            {
-                i->set_no_of_chunk(chunkNo);
+    size_t current = 10, next;
+    next = message.find("|",current);
+    while(next != string::npos) {
+        peer_list.emplace_back(new tracker_peer_list_entry(message.substr(current, next),inet_ntoa(si_other.sin_addr),
+                ntohs(si_other.sin_port)));
+        cout<<peer_list.back()->generate_message()<<"\n";
+        bool exist = false;
+        for (auto &i: file_list) {
+            if (peer_list.back()->get_file_name() == i->get_file_name()) {
+                if ((int) i->get_no_of_chunk() < peer_list.back()->get_chunk_no()) {
+                    i->set_no_of_chunk(peer_list.back()->get_chunk_no());
+                }
+                exist = true;
             }
-            exist = true;
         }
+        if (!exist) {
+            file_list.emplace_back(
+                    new tracker_file_list_entry(peer_list.back()->get_file_name(), peer_list.back()->get_chunk_no()));
+        }
+        current = next + 1;
+        next = message.find("|",current);
     }
-    if(!exist) {
-        file_list.emplace_back(new tracker_file_list_entry(fileName,chunkNo));
-    }
-
     return "";
 }
-string tracker::query(string message){
-    return "Hello";
+string tracker::query(){
+    string result = "RESPONSE ";
+    for(auto &i: file_list) {
+        result += i->get_file_name() + " " + to_string(i->get_no_of_chunk()) + "|";
+    }
+    return result;
 }
-string tracker::generateList(string message,string ip,int port){
-    return 0;
+string tracker::queryFile(string message){
+
+    string fileName = message.substr(10,message.length());
+    string result = "RESPONSE ";
+    for(auto &i: file_list) {
+        if(fileName == i->get_file_name()) {
+            result += i->get_file_name() + " " + to_string(i->get_no_of_chunk());
+            return result;
+        }
+    }
+    result += "Not Found";
+    return result;
+}
+string tracker::generateList(string message){
+    string result = "RESPONSE ";
+    string filename = message.substr(10,message.find("|",10));
+    for(auto &i: peer_list) {
+        if (i->get_file_name() == filename) {
+            result += i->generate_message();
+        }
+    }
+    return result;
 }
 string tracker::updateIP(string message){
     return 0;
 }
 string tracker::deleteIP(string message){
-    return 0;
+    //string filename = message.substr(10,message.find("|",10));
+//    for(vector<tracker_peer_list_entry*>::iterator iter = peer_list.begin(); iter != peer_list.end(); "blank") {
+//        if (((*iter)->get_public_IP() == inet_ntoa(si_other.sin_addr))) {
+//            peer_list.erase(iter);
+//        } else {
+//            ++iter;
+//        }
+//    }
+    peer_list.erase(
+            remove_if(peer_list.begin(),
+                    peer_list.end(),
+                    [](tracker_peer_list_entry* const & t) {return t->get_public_IP() == inet_ntoa(si_other.sin_addr);}
+            ),
+            peer_list.end()
+            );
+    return "";
 }
