@@ -128,6 +128,7 @@ void p2p_client::query_list_of_files(char *tracker_port) {
     // TODO: Maybe I have to parse the output to make it look nicer.
 
     closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
     WSACleanup();
 }
 
@@ -147,6 +148,7 @@ void p2p_client::query_file(char *tracker_port, string filename) {
     cout << recv_str;
 
     closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
     WSACleanup();
 }
 
@@ -165,14 +167,15 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
 
     string str = "REQUEST 4 ";
 
-    for (auto chunk_no = 1; chunk_no < num_of_chunks; chunk_no++) {
-        str = str + filename + " " + to_string(chunk_no);
+    for (auto chunk_no = 1; chunk_no <= num_of_chunks; chunk_no++) {
+        str = str + filename + " " + to_string(chunk_no) + "|";
     }
 
     const char *buf = str.c_str();
     sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
     closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
     WSACleanup();
 }
 

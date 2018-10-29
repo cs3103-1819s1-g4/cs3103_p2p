@@ -1,7 +1,7 @@
 
 #include "tracker_entries.h"
 
-string tracker_peer_list_entry::get_file_name_ptr() {
+string tracker_peer_list_entry::get_file_name() {
     return this->file_name;
 }
 
@@ -37,7 +37,7 @@ void tracker_file_list_entry::set_no_of_chunk(uint32_t num) {
     this->no_of_chunks = num;
 }
 std::string tracker_peer_list_entry::generate_message() {
-    std::string message = std::string(file_name) + std::to_string(chunk_no) +
-            std::to_string(public_IP_len) +  std::string(public_IP) +  std::to_string(port_no);
+    std::string message = std::string(file_name) + " " + std::to_string(chunk_no) + " " +
+            std::string(public_IP) + " " +  std::to_string(port_no) + "|";
     return message;
 }

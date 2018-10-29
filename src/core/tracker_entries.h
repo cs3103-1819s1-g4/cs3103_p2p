@@ -14,7 +14,6 @@ private:
 
     string file_name;
     uint8_t chunk_no;
-    uint8_t public_IP_len;
     string public_IP;
     uint16_t port_no;
 
@@ -39,7 +38,50 @@ public:
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
         }
     };
+    /**
+     * constructor for client entry in tracker
+     * @param message
+     */
+    tracker_peer_list_entry(string message) {
+        int current = 0,next;
+        try {
+            next = message.find(" ");
+            this->file_name = message.substr(current,next);
+            current = next;
+            next = message.find(" ",current);
+            this->chunk_no = stoi(message.substr(current,next));
+            current = next;
+            next = message.find(" ",current);
+            this->public_IP = message.substr(current,next);
+            current = next;
+            next = message.length();
+            this->port_no = stoi(message.substr(current,next));
 
+        } catch (std::exception &e) {
+            std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
+        }
+    };
+    /**
+ * constructor for client entry in tracker
+ * @param message
+ * @param IP address
+ * @param port
+ */
+    tracker_peer_list_entry(string message,string public_IP,int16_t port) {
+        int current = 0,next;
+        try {
+            next = message.find(" ");
+            this->file_name = message.substr(current,next);
+            current = next;
+            next = message.find(" ",current);
+            this->chunk_no = stoi(message.substr(current,next));
+            this->public_IP = public_IP;
+            this->port_no = port;
+
+        } catch (std::exception &e) {
+            std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
+        }
+    };
     /**
      * Deconstructor for client entry in tracker
      */
@@ -53,7 +95,7 @@ public:
      * @return attribute
      */
 
-    string get_file_name_ptr();
+    string get_file_name();
 
     uint8_t get_chunk_no();
 
