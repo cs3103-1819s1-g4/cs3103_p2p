@@ -3,7 +3,6 @@
 #ifndef CS3103_P2P_P2P_SERVER_H
 #define CS3103_P2P_P2P_SERVER_H
 
-#include <WS2tcpip.h>
 #include "../core/core_functions.h"
 #include "../core/p2p_request_response_packet.h"
 #include "../core/storage.h"

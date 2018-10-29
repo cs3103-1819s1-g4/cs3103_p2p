@@ -6,7 +6,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <windows.h>
+#include <Windows.h>
 #include <mutex>
 #include <string>
 

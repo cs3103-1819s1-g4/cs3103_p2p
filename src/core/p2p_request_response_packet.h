@@ -1,11 +1,7 @@
 #ifndef CS3103_P2P_P2P_PROTO_PACKET_H
 #define CS3103_P2P_P2P_PROTO_PACKET_H
 
-#include <cstdint>
-#include <string>
 #include <vector>
-#include <assert.h>
-#include <iostream>
 #include "tracker_entries.h"
 
 #define REQUEST_TYPE_FIELD_LEN 8
