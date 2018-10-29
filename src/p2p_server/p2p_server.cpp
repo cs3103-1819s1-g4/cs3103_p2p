@@ -132,14 +132,8 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
     return true;
 }
 
-/* 1 socket for public ip, 1 socket for private ip? */
+// TODO: use listening socket or have a seperate socket
 bool P2P_Server::get_public_ip_stun() {
-
-    WSADATA wsock;
-    int status = WSAStartup(MAKEWORD(2,2),&wsock);
-
-    if ( status != 0)
-        cout << "[ERROR]: " << status << " Unable to start Winsock.\n";
 
     /* Variables for iterating */
     string stun_serv_ip;
@@ -150,7 +144,7 @@ bool P2P_Server::get_public_ip_stun() {
     bool chosen = false;
     Stun_Pkt_Handler stun_pkt_handler;
     unsigned char stun_pkt[STUN_PKT_LEN];
-    int bytes_recv;
+    int bytes_recv, status;
 
     ZeroMemory(&stun_serv_addr, sizeof(stun_serv_addr));
     stun_serv_addr.sin_family = AF_INET;
@@ -210,4 +204,4 @@ bool P2P_Server::get_public_ip_stun() {
     << to_string(p2p_server_public_port) << "\n";
 
     return true;
-};
+}

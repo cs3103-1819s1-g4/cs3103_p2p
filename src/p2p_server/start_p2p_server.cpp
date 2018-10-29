@@ -1,7 +1,6 @@
-#include <iostream>
-#include <cstdio>
 #include "p2p_server.h"
 
+#pragma comment(lib, "Bcrypt")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
 
@@ -19,6 +18,7 @@ int main() {
         cout << "Failed to start server";
         return 1;
     } else {
+        p2p_server->get_public_ip_stun();
         p2p_server->listen();
     }
 
@@ -26,4 +26,3 @@ int main() {
     std::cout << "Goodbye!";
     return 0;
 }
-
