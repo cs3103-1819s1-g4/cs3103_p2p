@@ -1,37 +1,35 @@
 #ifndef CS3103_P2P_TRACKER_ENTRIES_H
 #define CS3103_P2P_TRACKER_ENTRIES_H
 
-/**
- * This header file contains the 2 types of entries a tracker has - file and client
- */
 #include <assert.h>
 #include <cstdint>
 #include <iostream>
+#include <string>
 
+using namespace std;
 
-class TrackerClientEntry {
+class tracker_peer_list_entry {
+
 private:
-    uint8_t file_name_len;
-    char *file_name;
+
+    string file_name;
     uint8_t chunk_no;
-    uint32_t public_IP;
+    string public_IP;
     uint16_t port_no;
+
 public:
     /**
      * constructor for client entry in tracker
      * @param filename_len
+     * @param file_name
      * @param chunk_no
      * @param public_IP
      * @param port_no
      */
-    TrackerClientEntry(uint8_t file_name_len, char *file_name, uint8_t chunk_no, uint32_t public_IP
-            , uint16_t port_no) {
-        assert(file_name_len > 0 && file_name_len < 256);
+    tracker_peer_list_entry(string file_name, uint8_t chunk_no,string public_IP, uint16_t port_no) {
+
         try {
-            this->file_name_len = (uint8_t) (file_name_len + 1);
-            this->file_name = (char *)malloc(this->file_name_len);
-            strcpy_s(file_name, file_name_len, file_name);
-            this->file_name[file_name_len] = '\0';
+            this->file_name = file_name;
             this->chunk_no = chunk_no;
             this->public_IP = public_IP;
             this->port_no = port_no;
@@ -40,72 +38,102 @@ public:
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
         }
     };
-
     /**
-     * deconstructor for client entry in tracker
+     * constructor for client entry in tracker
+     * @param message
      */
-    ~TrackerClientEntry() {
-        if(file_name != nullptr)
-            free(file_name);
+    tracker_peer_list_entry(string message) {
+        int current = 0,next;
+        try {
+            next = message.find(" ");
+            this->file_name = message.substr(current,next);
+            current = next;
+            next = message.find(" ",current);
+            this->chunk_no = stoi(message.substr(current,next));
+            current = next;
+            next = message.find(" ",current);
+            this->public_IP = message.substr(current,next);
+            current = next;
+            next = message.length();
+            this->port_no = stoi(message.substr(current,next));
+
+        } catch (std::exception &e) {
+            std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
+        }
     };
+    /**
+ * constructor for client entry in tracker
+ * @param message
+ * @param IP address
+ * @param port
+ */
+    tracker_peer_list_entry(string message,string public_IP,int16_t port) {
+        int current = 0,next;
+        try {
+            next = message.find(" ");
+            this->file_name = message.substr(current,next);
+            current = next;
+            next = message.find(" ",current);
+            this->chunk_no = stoi(message.substr(current,next));
+            this->public_IP = public_IP;
+            this->port_no = port;
+
+        } catch (std::exception &e) {
+            std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
+        }
+    };
+    /**
+     * Deconstructor for client entry in tracker
+     */
+//    ~tracker_peer_list_entry() {
+//        if(file_name != NULL)
+//            free(file_name);
+//    };
 
     /**
      * Getters for attributes in entry
      * @return attribute
      */
-    uint8_t get_file_name_len() {
-        return this->file_name_len;
-    }
 
-    char* get_file_name_ptr() {
-        return this->file_name;
-    }
+    string get_file_name();
 
-    uint8_t get_chunk_no() {
-        return this->chunk_no;
-    }
+    uint8_t get_chunk_no();
 
-    uint32_t get_public_IP() {
-        return this->public_IP;
-    }
+    string get_public_IP();
 
-    uint16_t get_port_no() {
-        return this->port_no;
-    }
+    uint16_t get_port_no();
 
-    /**
-     * Print client entry
-     */
-    void print_entry() {
-        std::cout << file_name << "\t" << chunk_no << "\t" << public_IP << "\t" << port_no << "\n";
-    };
+    void print_peer_list_entry();
+
+    std::string generate_message();
 };
 
-class TrackerFileEntry {
+class tracker_file_list_entry {
 private:
     uint8_t file_name_len;
-    char *file_name;
+    string file_name;
+    uint32_t no_of_chunks;
 public:
-    TrackerFileEntry(uint8_t file_name_len, char *file_name) {
+    tracker_file_list_entry(string file_name, uint32_t no_of_chunks) {
         assert(file_name_len > 0 && file_name_len < 256);
         try {
-            this->file_name_len = (uint8_t) (file_name_len + 1);
-            this->file_name = (char *)malloc(this->file_name_len);
-            strcpy_s(file_name, file_name_len, file_name);
-            this->file_name[file_name_len] = '\0';
+            this->file_name = file_name;
+            this->no_of_chunks = no_of_chunks;
 
         } catch (std::exception &e) {
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
         }
     };
 
-    ~TrackerFileEntry() {
-        if(file_name != nullptr)
-            free(file_name);
-    };
+//    ~tracker_file_list_entry() {
+//        if(file_name != nullptr)
+//            free(file_name);
+//    };
 
-    void print_entry() {
-        std::cout << file_name << "\t" << file_name_len;
-    }
+    void print_file_list_entry();
+    string get_file_name();
+    uint32_t get_no_of_chunk();
+    void set_no_of_chunk(uint32_t num);
 };
+
 #endif //CS3103_P2P_TRACKER_ENTRIES_H

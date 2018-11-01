@@ -3,6 +3,15 @@
 //
 
 #include "p2p_client.h"
+#include <iostream>
+#include <fstream>
+#include "../core/storage.h"
+#include "../core/p2p_request.h"
+#include <map>
+
+#define MAX_BUFFER_SIZE 65536
+
+using namespace std;
 
 // Winsock variables
 SOCKET connect_socket;
@@ -12,7 +21,9 @@ struct addrinfo *result = nullptr,
         hints;
 int iresult;
 
-using namespace std;
+char recvbuf[MAX_BUFFER_SIZE];
+
+map <int, string> peer_list;
 
 void p2p_client::display_menu() {
 
@@ -27,12 +38,12 @@ void p2p_client::display_menu() {
 
 }
 
-int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
+void p2p_client::connection(const char *tracker_ip, char *tracker_port) {
 
     iresult = WSAStartup(MAKEWORD(2,2), &wsa_data);
     if (iresult != 0) {
         printf("WSAStartup failed with error: %d\n", iresult);
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     ZeroMemory( &hints, sizeof(hints) );
@@ -44,7 +55,7 @@ int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
     if ( iresult != 0 ) {
         printf("getaddrinfo failed with error: %d\n", iresult);
         WSACleanup();
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     for(ptr=result; ptr != nullptr ; ptr=ptr->ai_next) {
@@ -54,7 +65,7 @@ int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
         if (connect_socket == INVALID_SOCKET) {
             printf("socket failed with error: %ld\n", WSAGetLastError());
             WSACleanup();
-            return 1;
+            exit(EXIT_FAILURE);
         }
         break;
     }
@@ -64,26 +75,60 @@ int p2p_client::connect_to_tracker(char *tracker_ip, char *tracker_port) {
     if (connect_socket == INVALID_SOCKET) {
         printf("Unable to connect to server!\n");
         WSACleanup();
-        return 1;
+        exit(EXIT_FAILURE);
     }
-
-    return 0;
 
 }
 
+void p2p_client::download_file(char *tracker_port, string filename) {
+
+    this->connection(this->tracker_ip, tracker_port);
+
+    string str = "REQUEST 1 " + filename;
+    const char *buf = str.c_str();
+
+    iresult = sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
+    iresult = recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
+
+    // TODO: Save the list of peers into an array
+//    string recv_str(recvbuf);
+//    parse_peer_list(peer_list, recvbuf);
+
+    closesocket(connect_socket);
+    WSACleanup();
+
+    // TODO: Connect to p2p_server
+
+//    int random_server = choose_random_server(peer_list);
+//
+//    // p2p_server_ip, p2p_server_port and chunk_number
+//
+//    this->connection(p2p_server_IP, p2p_server_port);
+//
+//    string str = "DOWNLOAD " + filename + " " + chunk_number;
+//
+//    closesocket(connect_socket);
+//    WSACleanup();
+
+}
 
 void p2p_client::query_list_of_files(char *tracker_port) {
 
-    this->connect_to_tracker(this->tracker_ip, tracker_port);
+    this->connection(this->tracker_ip, tracker_port);
 
     string str = "REQUEST 6";
     const char *buf = str.c_str();
 
     iresult = sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
-    // TODO: Client needs to receive the list of files from tracker
+    iresult = recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
+    string recv_str(recvbuf);
+    cout << recv_str;
+
+    // TODO: Maybe I have to parse the output to make it look nicer.
 
     closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
     WSACleanup();
 }
 
@@ -91,17 +136,46 @@ void p2p_client::query_file(char *tracker_port, string filename) {
 
     assert(filename.length() < 256);
 
-    this->connect_to_tracker(this->tracker_ip, tracker_port);
+    this->connection(this->tracker_ip, tracker_port);
 
-    string str = "REQUEST 7 ";
-    str.append(filename);
+    string str = "REQUEST 7 " + filename;
     const char *buf = str.c_str();
 
     iresult = sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
-    // TODO: Client needs to receive the file from the tracker
+    iresult = recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
+    string recv_str(recvbuf);
+    cout << recv_str;
 
     closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
+    WSACleanup();
+}
+
+void p2p_client::upload_file(char *tracker_port, string filename) {
+
+    this->connection(this->tracker_ip, tracker_port);
+
+    Storage storage("..\\download");
+    int chunk_no_buffer[MAX_BUFFER_SIZE];
+    int num_of_chunks = storage.getArrOfChunkNumbers(chunk_no_buffer, MAX_BUFFER_SIZE, filename);
+
+    if (num_of_chunks == -1) {
+        cout << "getArrOfChunkNumbers is unsuccessful!";
+        exit(EXIT_FAILURE);
+    }
+
+    string str = "REQUEST 4 ";
+
+    for (auto chunk_no = 1; chunk_no <= num_of_chunks; chunk_no++) {
+        str = str + filename + " " + to_string(chunk_no) + "|";
+    }
+
+    const char *buf = str.c_str();
+    sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
+
+    closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
     WSACleanup();
 }
 
@@ -127,10 +201,14 @@ int execute_user_option(p2p_client client) {
 
        switch (user_option) {
            case 1:
-//               client.download_file(DEFAULT_TRACKER_PORT, DEFAULT_P2P_SERVER_PORT);
+               cout << "Enter filename to download: ";
+               cin >> filename;
+               client.download_file(DEFAULT_TRACKER_PORT, filename);
                return 1;
            case 2:
-//               client.upload_file(DEFAULT_TRACKER_PORT);
+               cout << "Enter filename to upload: ";
+               cin >> filename;
+               client.upload_file(DEFAULT_TRACKER_PORT, filename);
                return 2;
            case 3:
                client.query_list_of_files(DEFAULT_TRACKER_PORT);

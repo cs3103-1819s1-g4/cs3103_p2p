@@ -12,10 +12,12 @@
 #include <iostream>
 #include <string>
 
+using namespace std;
+
 const int Q_LEN = 100;
 
-void get_private_IP(IN_ADDR &IP);
-void print_main_server(struct sockaddr_in *addr, std::string port);
+void get_private_IP(in_addr &IP);
+void print_server(struct sockaddr_in *addr, string port, string server);
 
 /**
  * Consumer producer queue of char buffers of packet_size for concurrent purposes

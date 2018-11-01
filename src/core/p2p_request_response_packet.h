@@ -1,11 +1,7 @@
 #ifndef CS3103_P2P_P2P_PROTO_PACKET_H
 #define CS3103_P2P_P2P_PROTO_PACKET_H
 
-#include <cstdint>
-#include <string>
 #include <vector>
-#include <assert.h>
-#include <iostream>
 #include "tracker_entries.h"
 
 #define REQUEST_TYPE_FIELD_LEN 8
@@ -13,22 +9,22 @@
 
 using namespace std;
 
-static const char REQUEST_TYPE_FIELD[] = "REQUEST\\0";
-static const char RESPONSE_TYPE_FIELD[] = "RESPONSE\\0";
+static const char REQUEST_TYPE_FIELD[] = "REQUEST\0";
+static const char RESPONSE_TYPE_FIELD[] = "RESPONSE\0";
+const int FILE_NAME_LEN = 256;
 
 /**
- * There are 2 default constructors for P2P request packet as 1 has variable length while the other has
- * fixed length.
+ * There are 2 constructors for P2P request packet
  */
 struct P2P_request_pkt {
-private:
+public:
     char type[REQUEST_TYPE_FIELD_LEN];
     uint8_t flag;
     uint8_t file_name_len; // in bytes
-    char *file_name;
+    char file_name[FILE_NAME_LEN];
     uint8_t chunk_no;
     uint32_t saddr;
-public:
+
     /**
      * Constructor for creating P2P request packets for flag = 1, 2, 3, 4, 7
      * 1 - Download file from swarm. File name must be filled
@@ -48,14 +44,13 @@ public:
             , uint8_t chunk_no, uint32_t saddr) {
 
         assert((flag > 0 && flag < 5) || flag == 7);
-        assert(file_name_len > 0 && file_name_len < 256);   // leave a space for '\0'
+        assert(file_name_len > 0 && file_name_len < FILE_NAME_LEN); // leave a space for '\0'
 
         try {
             strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
             this->flag = flag;
-            this->file_name_len = (uint8_t) (file_name_len + 1);
-            this->file_name = (char *) malloc(this->file_name_len);
-            strcpy_s(this->file_name, file_name_len, file_name);
+            this->file_name_len = file_name_len;
+            strcpy_s(this->file_name, this->file_name_len, file_name);
             this->file_name[file_name_len] = '\0';
             this->chunk_no = chunk_no;
             this->saddr = saddr;
@@ -80,7 +75,7 @@ public:
             strcpy_s(this->type, REQUEST_TYPE_FIELD_LEN, REQUEST_TYPE_FIELD);
             this->flag = flag;
             this->file_name_len = 0;
-            this->file_name = nullptr;
+            memset(file_name, '\0', sizeof(file_name));
             this->chunk_no = NULL;
             this->saddr = saddr;
 
@@ -89,25 +84,20 @@ public:
         }
     };
 
-    ~P2P_request_pkt() {
-        if(file_name != nullptr)
-            file_name = nullptr;
-    };
 };
 
 
 /**
- * Have to be declare using the following: P2P_response_pkt<T> name
- * @tparam T
+ *
  */
 template <typename T>
-struct P2P_response_pkt {
-private:
+struct p2p_response_pkt {
+public:
     char type[RESPONSE_TYPE_FIELD_LEN];
     uint8_t list_len;
     vector<T> entry_list;
-public:
-    P2P_response_pkt(uint8_t list_len, vector<T> list) {
+
+    p2p_response_pkt(uint8_t list_len, vector<T> list) {
         assert(list_len > 0);
 
         strcpy_s(this->type, RESPONSE_TYPE_FIELD_LEN, RESPONSE_TYPE_FIELD);

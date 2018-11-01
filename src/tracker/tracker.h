@@ -8,14 +8,17 @@
 #include <WS2tcpip.h>
 #include <winsock.h>
 #include <string>
+#include <list>
 #include "../core/core_functions.h"
+#include "../core/tracker_entries.h"
+
 
 #pragma comment(lib, "Mswsock.lib")
 #pragma comment(lib, "ws2_32.lib")
 
 #define DEFAULT_TRACKER_PORT "80"
 #define DEFAULT_P2P_SERVER_PORT "6881"
-#define PACK_SIZE 2048  //Max length of buffer
+#define PACK_SIZE 65536  //Max length of buffer
 
 using namespace std;
 
@@ -23,8 +26,11 @@ using namespace std;
 class tracker {
 private:
     const char *port;
-    IN_ADDR server_ip;
+    in_addr server_ip;
     WSADATA wsa;
+    vector<tracker_peer_list_entry*> peer_list;
+    vector<tracker_file_list_entry*> file_list;
+
 public:
 
     tracker(const char *port): port(port) {
@@ -40,9 +46,10 @@ public:
 
     };
     void init();
-    string addEntry(string message);
-    string addFile(string message);
-    string query(string message);
+    string addEntry(string message,string ip,int port);
+    string addFile(string message,string ip,int port);
+    string query();
+    string queryFile(string message);
     string generateList(string message);
     string updateIP(string message);
     string deleteIP(string message);

@@ -43,14 +43,14 @@ bool MainServer::start(const char *port) {
         return false;
     }
 
-    if (bind(serv_sock, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
+    if (::bind(serv_sock, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
         std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
         freeaddrinfo(result);
         closesocket(serv_sock);
         return false;
     }
 
-    print_main_server((struct sockaddr_in *)result->ai_addr, port);
+    print_server((struct sockaddr_in *)result->ai_addr, port);
     std::cout.flush();
 
     // We don't need this info any more

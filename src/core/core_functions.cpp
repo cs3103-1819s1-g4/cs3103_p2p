@@ -1,4 +1,5 @@
 #include "core_functions.h"
+
 /**
  * Producer function of consumer producer queue of buffers.
  * Each time a datagram is received. It is stored in the queue at idx 'next_in'.
@@ -63,7 +64,7 @@ void RecvBuffer::consumer(char *b) {
  * Can be edited find all the private IPs of the machine.
  * @param IP
  */
-void get_private_IP(IN_ADDR &IP) {
+void get_private_IP(in_addr &IP) {
 
     /* Variables used by GetIpAddrTable */
     PMIB_IPADDRTABLE localhost_IP_addr_table;
@@ -118,7 +119,7 @@ void get_private_IP(IN_ADDR &IP) {
  * Print the IP address and port number the main server is running.
  * @param addr
  */
-void print_main_server(struct sockaddr_in *addr, std::string port) {
-    std::cout << "P2P server running at IP address: " << inet_ntoa((struct in_addr)addr->sin_addr)
+void print_server(struct sockaddr_in *addr, string port, string server) {
+    std::cout << server << " running at IP address: " << inet_ntoa((struct in_addr)addr->sin_addr)
             << "\tport number: " << port << "\n";
 }
