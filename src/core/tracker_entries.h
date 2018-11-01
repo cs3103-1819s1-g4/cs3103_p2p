@@ -82,6 +82,8 @@ public:
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
         }
     };
+
+    tracker_peer_list_entry() : file_name{nullptr}, chunk_no{NULL}, public_IP{nullptr}, port_no{NULL} {}
     /**
      * Deconstructor for client entry in tracker
      */

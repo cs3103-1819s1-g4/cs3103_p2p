@@ -214,9 +214,15 @@ string tracker::queryFile(string message){
 }
 string tracker::generateList(string message){
     string result = "RESPONSE ";
-    string filename = message.substr(10,message.find("|",10));
+//    string filename = message.substr(10,message.find("|",10)); // TODO: Please delete this line
+
+    // The following removes "REQUEST 1 ", thereby leaving only the filename. message == filename.
+    string space_delimiter = " ";
+    message.erase(0, message.find(space_delimiter) + space_delimiter.length());
+    message.erase(0, message.find(space_delimiter) + space_delimiter.length());
+
     for(auto &i: peer_list) {
-        if (i->get_file_name() == filename) {
+        if (i->get_file_name() == message) {
             result += i->generate_message();
         }
     }
