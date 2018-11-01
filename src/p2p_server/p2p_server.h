@@ -79,6 +79,9 @@ public:
      */
     bool process_request(sockaddr_in client_addr, int sin_size);
     bool get_public_ip_stun();
+    bool get_public_ip_stun2(char * return_ip_port, char * default_private_server_port);
+    int stun_xor_addr(const char * stun_server_ip,short stun_server_port,short local_port,char * return_ip_port);
+
 };
 
 #endif //CS3103_P2P_P2P_SERVER_H

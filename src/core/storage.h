@@ -60,14 +60,19 @@ public:
      */
     bool addFileToDownloadFolder(std::string pathToFile, std::string fileName);
 
-    // gets the final chunk number / total number of chunks in file
-    // only fully downloaded file
+    /**
+     * gets the final chunk number / total number of chunks in file
+     * @param fileName - file name
+     */
     int getFinalChunkNumber(std::string fileName);
 
-    // paramter buf - array of integers of chunk numbers that you have
-    // count - Number of elements that can be used in buffer
-    // returns the total number of current chunks of file (the array size of buf)
-    // if unsuccessful if -1
+    /**
+     * get a an array of chunk numbers
+     * @param buf - array of int to be written
+     * @param count - number of elemnts in buf
+     * @param filename - file name
+     * @return - the total number of current chunks of file (the array size of buf), -1 if unsuccessfull
+     */
     int getArrOfChunkNumbers(int * buf, size_t count, std::string filename);
 
     std::string getLastError();
