@@ -36,7 +36,7 @@ public:
 
     void display_menu();
 
-    void connection(const char *tracker_ip, char *tracker_port);
+    void connection(const char *ip_addr, const char *port_num, bool is_tracker);
 
     // These functions are ONLY for p2p_client and tracker communication
     void query_list_of_files(char *tracker_port);
