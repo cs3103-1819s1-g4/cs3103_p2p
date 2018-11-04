@@ -107,45 +107,55 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
     // The following part deals with connection to p2p server
     // TODO: Connect to p2p_server.. almost done..
-//    string p2p_server_ip;
-//    string p2p_server_chunk_num;
-//    string p2p_server_port_num;
-//    vector<bool> check_downloaded_chunks(static_cast<unsigned int>(peer_list_size + 1), false);
-//    check_downloaded_chunks[0] = NULL; // since chunk starts from #1; we will not use index 0.
-//    int downloaded_chunks = 0;
-//
-//    while (downloaded_chunks != peer_list_size + 1) {
-//
-//        choose_random_server(peer_list, p2p_server_ip,
-//                p2p_server_chunk_num, p2p_server_port_num);
-//
-//        // The chunk_num has already been downloaded; choose another chunk
-//        if (check_downloaded_chunks[p2p_server_chunk_num]) {
-//            continue;
-//        } else {
-//            // Testing by printing
-//            cout << "p2p_server_ip is: " + p2p_server_ip << endl;
-//
-//            this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(), false);
-//
-//            str = "DOWNLOAD " + filename + " " + p2p_server_port_num;
-//            const char *buf_tcp = str.c_str();
-//
-//            iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
-//            // TODO: what if connection failed?
-//            iresult = recv(connect_socket, recvbuf, strlen(recvbuf), 0);
-//
-//            cout << recvbuf << endl;
-//
-//            closesocket(connect_socket);
-//            memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
-//            peer_list.clear(); // clears peer_list
-//            WSACleanup();
-//
-//            check_downloaded_chunks[p2p_server_chunk_num] = true;
-//            downloaded_chunks++;
-//        }
+    string p2p_server_ip;
+    string p2p_server_chunk_num;
+    string p2p_server_port_num;
+    vector<bool> check_downloaded_chunks(static_cast<unsigned int>(peer_list_size + 1));
+//    for (auto i = 0; i < peer_list_size + 1; i++) {
+//        check_downloaded_chunks[i] = false;
 //    }
+    check_downloaded_chunks[0] = NULL; // since chunk starts from #1; we will not use index 0.
+    int downloaded_chunks = 0;
+
+    while (downloaded_chunks != peer_list_size) {
+
+        choose_random_server(peer_list, p2p_server_ip,
+                p2p_server_chunk_num, p2p_server_port_num);
+
+        cout << "Trying to obtain chunk number " + p2p_server_chunk_num << endl;
+
+        // The chunk_num has already been downloaded; choose another chunk
+        if (check_downloaded_chunks[stoi(p2p_server_chunk_num)]) {
+            continue;
+        } else {
+            // Testing by printing
+            cout << "Connecting to: " + p2p_server_ip + ", " + p2p_server_port_num << endl;
+
+            this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(), false);
+
+            str = "DOWNLOAD " + filename + " " + p2p_server_port_num;
+            const char *buf_tcp = str.c_str();
+
+            iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
+            // TODO: what if connection failed?
+            iresult = recv(connect_socket, recvbuf, strlen(recvbuf), 0);
+
+            // p2p_server will send me just the chunk data...
+            Storage storage("..\\download");
+            storage.saveChunk(recvbuf, sizeof(char), strlen(recvbuf), filename);
+
+            closesocket(connect_socket);
+            memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
+            peer_list.clear(); // clears peer_list
+            WSACleanup();
+
+            check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
+            downloaded_chunks++;
+
+            // Once the chunk is downloaded, inform the tracker
+            this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
+        }
+    }
 
 }
 
@@ -203,7 +213,7 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
 
     this->connection(this->tracker_ip, tracker_port, true);
 
-    Storage storage("..\\download");
+    Storage storage("..\\to_upload");
     int chunk_no_buffer[MAX_BUFFER_SIZE];
     int num_of_chunks = storage.getArrOfChunkNumbers(chunk_no_buffer, MAX_BUFFER_SIZE, filename);
 
@@ -215,6 +225,7 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
     string str = "REQUEST 4 ";
 
     // Eg. REQUEST 4 test.txt 1 test.txt 2 test.txt 3
+    // TODO: Modify to include public IP
     for (auto chunk_no = 1; chunk_no <= num_of_chunks; chunk_no++) {
         str += filename + " " + to_string(chunk_no) + "|"; // TODO: Not exactly what I want..
     }
@@ -230,6 +241,20 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
 void p2p_client::quit() {
     // TODO: The client has to contact the tracker... have to adjust index
     printf("Goodbye!\n");
+}
+
+void p2p_client::inform_tracker_downloaded_chunk(char *tracker_port, string filename, string chunk_num) {
+
+    this->connection(this->tracker_ip, tracker_port, true);
+
+    string str = "REQUEST 3 " + filename + " " + chunk_num;
+
+    const char *buf = str.c_str();
+    sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
+
+    closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
+    WSACleanup();
 }
 
 int execute_user_option(p2p_client client) {
