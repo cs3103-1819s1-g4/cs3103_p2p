@@ -23,6 +23,7 @@ int main() {
 
     cout << "#################### Welcome to P2P client ####################\n"
                  "\nEnter Tracker's IP address: ";
+    cin >> tracker_ip_string;
 
     const char *tracker_ip = tracker_ip_string.c_str();
 
