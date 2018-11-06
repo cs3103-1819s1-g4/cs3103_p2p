@@ -21,13 +21,15 @@ class p2p_client {
 private:
     bool online;
     const char *tracker_ip;
+    in_addr p2p_client_private_ip;
     P2P_Server *p2p_server;
     Storage *p2p_client_storage;
 public:
     // Constructor
     explicit p2p_client(const char *tracker_ip) {
         online = true;
-        tracker_ip = tracker_ip;
+        this->tracker_ip = tracker_ip;
+        get_private_IP(p2p_client_private_ip);
         p2p_client_storage = new Storage(PATH_TO_STORAGE_DIRECTORY);
         p2p_server = new P2P_Server(p2p_client_storage);
     };
