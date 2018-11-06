@@ -18,7 +18,7 @@ int main() {
         cout << "Failed to start server";
         return 1;
     } else {
-        p2p_server->get_public_ip_stun();
+        //p2p_server->get_public_ip_stun();
         char ip_port[50];
         p2p_server->get_public_ip_stun2(ip_port, DEFAULT_P2P_SERVER_PORT);
         p2p_server->listen();

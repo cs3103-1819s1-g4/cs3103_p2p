@@ -250,7 +250,6 @@ bool P2P_Server::get_public_ip_stun2(char * return_ip_port, char * private_serve
     else
         printf("public ip:port = %s\n",return_ip_port);
 
-    printf("Main over.\n");
     return false;
 }
 
