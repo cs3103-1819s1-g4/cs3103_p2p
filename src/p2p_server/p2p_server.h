@@ -25,7 +25,7 @@ private:
     char *recv_buffer;
     char *send_buffer;
     char *chunk_buffer;
-    Storage storage;
+    Storage *storage;
     vector< pair<string, uint16_t> > STUN_SERV_VECTOR {make_pair("stun.l.google.com", 19305),
                                                       make_pair("stun1.l.google.com", 19305),
                                                       make_pair("stun2.l.google.com", 19305),
@@ -35,7 +35,7 @@ public:
     /**
      * Constructor for P2P server
      */
-    explicit P2P_Server() : listen_sock(INVALID_SOCKET), online(false), storage(PATH_TO_STORAGE_DIRECTORY)   {
+    explicit P2P_Server(Storage *p2p_client_storage) : listen_sock(INVALID_SOCKET), online(false), storage(p2p_client_storage){
 
         WSADATA wsock;
         int status = WSAStartup(MAKEWORD(2,2),&wsock);

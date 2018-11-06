@@ -228,9 +228,8 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
 
     this->connection(this->tracker_ip, tracker_port, true);
 
-    Storage storage("..\\to_upload");
     int chunk_no_buffer[MAX_BUFFER_SIZE];
-    int num_of_chunks = storage.getArrOfChunkNumbers(chunk_no_buffer, MAX_BUFFER_SIZE, filename);
+    int num_of_chunks = p2p_client_storage->getArrOfChunkNumbers(chunk_no_buffer, MAX_BUFFER_SIZE, filename);
 
     if (num_of_chunks == -1) {
         cout << "getArrOfChunkNumbers is unsuccessful!";
