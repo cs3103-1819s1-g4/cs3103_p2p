@@ -29,8 +29,9 @@ public:
 
     void display_menu();
 
-    void connection(const char *ip_addr, const char *port_num, bool is_tracker);
+    int connection(const char *ip_addr, const char *port_num, bool is_tracker);
     void inform_tracker_downloaded_chunk(char *tracker_port, string filename, string chunk_num);
+    void ask_updated_peer_list(char *tracker_port, string filename);
 
     // These functions are ONLY for p2p_client and tracker communication
     void query_list_of_files(char *tracker_port);
@@ -40,7 +41,7 @@ public:
     void download_file(char *tracker_port, string filename);
     void upload_file(char *tracker_port, string filename);
 
-    void quit();
+    void quit(char *tracker_port);
 
     bool start_p2p_server_thread();
 

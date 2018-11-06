@@ -28,6 +28,7 @@ int iresult;
 
 char recvbuf[MAX_BUFFER_SIZE];
 map <int, tracker_peer_list_entry> peer_list;
+string filename;
 
 void p2p_client::display_menu() {
 
@@ -42,7 +43,7 @@ void p2p_client::display_menu() {
 
 }
 
-void p2p_client::connection(const char *ip_addr, const char *port_num, bool is_tracker) {
+int p2p_client::connection(const char *ip_addr, const char *port_num, bool is_tracker) {
 
     iresult = WSAStartup(MAKEWORD(2,2), &wsa_data);
     if (iresult != 0) {
@@ -82,12 +83,20 @@ void p2p_client::connection(const char *ip_addr, const char *port_num, bool is_t
 
     freeaddrinfo(result);
 
-    if (connect_socket == INVALID_SOCKET) {
-        printf("Unable to connect to server!\n");
+    if (connect_socket == INVALID_SOCKET && is_tracker) {
+        printf("Unable to connect to tracker!\n");
         WSACleanup();
         exit(EXIT_FAILURE);
     }
 
+    // ASK UPDATED PEER LIST
+    if (connect_socket == INVALID_SOCKET && !is_tracker) {
+        printf("Unable to connect to p2p server! Trying again...\n");
+        WSACleanup();
+        return -1;
+    }
+
+    return 0;
 }
 
 void p2p_client::download_file(char *tracker_port, string filename) {
@@ -133,13 +142,17 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             // Testing by printing
             cout << "Connecting to: " + p2p_server_ip + ", " + p2p_server_port_num << endl;
 
-            this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(), false);
+            // If the connection fails, try again...
+            if (this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(),
+                    false) == -1) {
+                this->ask_updated_peer_list(DEFAULT_TRACKER_PORT, filename);
+                continue;
+            }
 
             str = "DOWNLOAD " + filename + " " + p2p_server_chunk_num;
             const char *buf_tcp = str.c_str();
 
             iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
-            // TODO: what if connection failed?
             iresult = recv(connect_socket, recvbuf, strlen(recvbuf), 0);
 
             // p2p_server will send me just the chunk data...
@@ -148,7 +161,7 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
             closesocket(connect_socket);
             memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
-            peer_list.clear(); // clears peer_list
+//            peer_list.clear(); // clears peer_list
             WSACleanup();
 
             check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
@@ -239,8 +252,18 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
     WSACleanup();
 }
 
-void p2p_client::quit() {
-    // TODO: The client has to contact the tracker... have to adjust index
+void p2p_client::quit(char *tracker_port) {
+
+    this->connection(this->tracker_ip, tracker_port, true);
+
+    string str = "REQUEST 5 " + LOCAL_IP_ADDRESS + " " + DEFAULT_P2P_SERVER_PORT;
+    const char *buf = str.c_str();
+    sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
+
+    closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
+    WSACleanup();
+
     printf("Goodbye!\n");
 }
 
@@ -259,10 +282,28 @@ void p2p_client::inform_tracker_downloaded_chunk(char *tracker_port, string file
     WSACleanup();
 }
 
+void p2p_client::ask_updated_peer_list(char *tracker_port, string filename) {
+
+    this->connection(this->tracker_ip, tracker_port, true);
+
+    string str = "REQUEST 2 " + filename;
+    const char *buf = str.c_str();
+    sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
+    recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
+
+    peer_list.clear(); // destroys the current peer list
+
+    string recv_str(recvbuf);
+    parse_peer_list(peer_list, recvbuf);
+
+    closesocket(connect_socket);
+    memset(recvbuf, '\0', MAX_BUFFER_SIZE);
+    WSACleanup();
+}
+
 int execute_user_option(p2p_client client) {
 
        int user_option;
-       string filename;
        cin >> user_option;
 
        if (cin.fail()) {
@@ -297,7 +338,7 @@ int execute_user_option(p2p_client client) {
                client.query_file(DEFAULT_TRACKER_PORT, filename);
                return 4;
            default:
-               client.quit();
+               client.quit(DEFAULT_TRACKER_PORT);
                return 5;
        }
 
