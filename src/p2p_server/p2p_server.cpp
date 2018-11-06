@@ -106,7 +106,7 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
 
     assert(request->flag == 3);
 
-    if(storage.getChunk(chunk_buffer, request->file_name, request->chunk_no, &chunk_size) != -1) {
+    if(storage->getChunk(chunk_buffer, request->file_name, request->chunk_no, &chunk_size) != -1) {
 
         strcpy_s(send_buffer, chunk_size - FIXED_CHUNK_HEADER_SIZE, chunk_buffer + FIXED_CHUNK_HEADER_SIZE);
 
@@ -250,7 +250,6 @@ bool P2P_Server::get_public_ip_stun2(char * return_ip_port, char * private_serve
     else
         printf("public ip:port = %s\n",return_ip_port);
 
-    printf("Main over.\n");
     return false;
 }
 

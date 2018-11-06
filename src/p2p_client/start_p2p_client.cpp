@@ -6,8 +6,11 @@
 
 #include <iostream>
 #include <cstdio>
+#include <thread>
+#include <functional>
 #include "p2p_client.h"
 
+#pragma comment(lib, "Bcrypt")
 #pragma comment(lib, "Mswsock.lib")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
@@ -20,14 +23,19 @@ int main() {
 
     cout << "#################### Welcome to P2P client ####################\n"
                  "\nEnter Tracker's IP address: ";
-    cin >> tracker_ip_string;
 
     const char *tracker_ip = tracker_ip_string.c_str();
 
     int user_option;
     p2p_client client(tracker_ip);
 
+    // Don't need to call join
+    thread p2p_server_thread(&p2p_client::start_p2p_server_thread, client);
+
+    Sleep(2000);
+
     do {
+
         client.display_menu();
         user_option = execute_user_option(client);
     } while (user_option != 5);
