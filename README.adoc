@@ -45,7 +45,7 @@ FLAG VALUES (values from 1 to 7)
 Format: RESPONSE <LIST OF ENTRIES>
 ----
 
-eg. RESPONSE test.txt 1 192.168.1.5 6881|test.txt 2 192.168.1.6 6881
+eg. RESPONSE test.txt 1 192.168.1.5 6881|test.txt 2 192.168.1.6 6881|
 
 ----
 Format: RESPONSE <LIST OF FILES>
