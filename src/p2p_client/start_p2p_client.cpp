@@ -29,8 +29,8 @@ int main() {
     int user_option;
     p2p_client client(tracker_ip);
 
-    // Don't need to call join
     thread p2p_server_thread(&p2p_client::start_p2p_server_thread, client);
+    p2p_server_thread.detach();
 
     Sleep(2000);
 
