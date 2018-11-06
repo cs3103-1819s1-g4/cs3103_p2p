@@ -23,14 +23,15 @@ int main() {
 
     cout << "#################### Welcome to P2P client ####################\n"
                  "\nEnter Tracker's IP address: ";
+    cin >> tracker_ip_string;
 
     const char *tracker_ip = tracker_ip_string.c_str();
 
     int user_option;
     p2p_client client(tracker_ip);
 
-    // Don't need to call join
     thread p2p_server_thread(&p2p_client::start_p2p_server_thread, client);
+    p2p_server_thread.detach();
 
     Sleep(2000);
 
