@@ -73,7 +73,6 @@ void tracker::listen() {
 
 //print details of the client/peer and the data received
         printf("Data: %s\n", buf);
-
         int request = buf[8] - '0';
 
         std::string message(buf);
@@ -94,13 +93,13 @@ void tracker::listen() {
                 break;
                 //Inform the tracker that a chunk has been successfully downloaded. FILENAME and CHUNK NO must be filled.
             case 3:
-                reply = addEntry(message,inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port)) ;
+                reply = addEntry(message) ;
                 //printf("Adding Entry from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Upload a new file. FILENAME, CHUNK NO and IP ADDRESS must be filled.
             case 4:
-                reply = addFile(message,inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port)) ;
-                printf("Adding list of entry from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
+                reply = addFile(message) ;
+                //printf("Adding list of entry from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Exit from swarm. IP ADDRESS must be filled.
             case 5:
@@ -140,64 +139,80 @@ void tracker::listen() {
     WSACleanup();
 
 }
-string tracker::addEntry(string message,string ip,int port){
-    //extract from message
-    int current = 10, next;
-    next = message.find("|",current);
-    while(next != string::npos) {
-        peer_list.emplace_back(new tracker_peer_list_entry(message.substr(current, next),inet_ntoa(si_other.sin_addr),
-                                                           ntohs(si_other.sin_port)));
-        cout << "Added " << peer_list.back()->generate_message();
-        bool exist = false;
-        for (auto &i: file_list) {
-            if (peer_list.back()->get_file_name() == i->get_file_name()) {
-                if ((int) i->get_no_of_chunk() > peer_list.back()->get_chunk_no()) {
-                    i->set_no_of_chunk(peer_list.back()->get_chunk_no());
-                }
-                exist = true;
-            }
+string tracker::addEntry(string message){
+    //extract IP and Port from message
+    char * ptr = NULL;
+    char *cstr = new char[message.length() + 1];
+    strcpy(cstr,message.c_str());
+    ptr = strtok(cstr," ");
+    ptr = strtok(nullptr," ");
+    ptr = strtok(nullptr," ");
+    string public_IP(ptr);
+    ptr = strtok(NULL," ");
+    string public_port(ptr);
+
+    ptr = strtok(NULL,"|");
+    while(ptr != NULL) {
+        string temp(ptr);
+        peer_list.emplace_back(new tracker_peer_list_entry(temp,public_IP,stoi(public_port)));
+        cout << "Added " << peer_list.back()->generate_message()<<"\n";
+        ptr = strtok(NULL,"|");
+    }
+    bool exist = false;
+    for (auto &i: file_list) {
+        if (peer_list.back()->get_file_name() == i->get_file_name()) {
+            exist = true;
+            break;
         }
-        if (!exist) {
-            file_list.emplace_back(
-                    new tracker_file_list_entry(peer_list.back()->get_file_name(), peer_list.back()->get_chunk_no()));
-        }
-        current = next;
-        next = message.find("|",current);
+    }
+    if (!exist) {
+        file_list.emplace_back(
+                new tracker_file_list_entry(peer_list.back()->get_file_name()));
     }
     return "";
 }
-string tracker::addFile(string message,string ip,int port){
-    //extract from message
-    size_t current = 10, next;
-    next = message.find("|",current);
-    while(next != string::npos) {
-        peer_list.emplace_back(new tracker_peer_list_entry(message.substr(current, next),inet_ntoa(si_other.sin_addr),
-                ntohs(si_other.sin_port)));
-        cout<<peer_list.back()->generate_message()<<"\n";
-        bool exist = false;
-        for (auto &i: file_list) {
-            if (peer_list.back()->get_file_name() == i->get_file_name()) {
-                if ((int) i->get_no_of_chunk() < peer_list.back()->get_chunk_no()) {
-                    i->set_no_of_chunk(peer_list.back()->get_chunk_no());
-                }
-                exist = true;
-            }
+string tracker::addFile(string message){
+    //extract IP and Port from message
+    char * ptr = NULL;
+    char *cstr = new char[message.length() + 1];
+    strcpy(cstr,message.c_str());
+    ptr = strtok(cstr," ");
+    ptr = strtok(nullptr," ");
+    ptr = strtok(nullptr," ");
+    string public_IP(ptr);
+    ptr = strtok(NULL," ");
+    string public_port(ptr);
+
+    ptr = strtok(NULL,"|");
+    while(ptr != NULL) {
+        string temp(ptr);
+        peer_list.emplace_back(new tracker_peer_list_entry(temp,public_IP,stoi(public_port)));
+        cout << "Added " << peer_list.back()->generate_message()<<"\n";
+        ptr = strtok(NULL,"|");
+    }
+    bool exist = false;
+    for (auto &i: file_list) {
+        if (peer_list.back()->get_file_name() == i->get_file_name()) {
+            exist = true;
+            break;
         }
-        if (!exist) {
-            file_list.emplace_back(
-                    new tracker_file_list_entry(peer_list.back()->get_file_name(), peer_list.back()->get_chunk_no()));
-        }
-        current = next + 1;
-        next = message.find("|",current);
+    }
+    if (!exist) {
+        file_list.emplace_back(
+                new tracker_file_list_entry(peer_list.back()->get_file_name()));
     }
     return "";
 }
 string tracker::query(){
     string result = "RESPONSE ";
-    for(auto &i: file_list) {
-        result += i->get_file_name() + " " + to_string(i->get_no_of_chunk()) + "|";
+    if(file_list.empty())
+    {
+        return result;
     }
-    return result;
+    for(auto &i: file_list) {
+        result += i->get_file_name() + ", ";
+    }
+    return result.substr(0,result.length()-2);
 }
 string tracker::queryFile(string message){
 
@@ -205,7 +220,7 @@ string tracker::queryFile(string message){
     string result = "RESPONSE ";
     for(auto &i: file_list) {
         if(fileName == i->get_file_name()) {
-            result += i->get_file_name() + " " + to_string(i->get_no_of_chunk());
+            result += i->get_file_name();
             return result;
         }
     }

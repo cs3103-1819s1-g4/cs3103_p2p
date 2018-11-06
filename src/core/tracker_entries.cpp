@@ -29,13 +29,13 @@ string tracker_file_list_entry::get_file_name() {
     return this->file_name;
 }
 
-uint32_t tracker_file_list_entry::get_no_of_chunk() {
-    return this->no_of_chunks;
-}
-
-void tracker_file_list_entry::set_no_of_chunk(uint32_t num) {
-    this->no_of_chunks = num;
-}
+//uint32_t tracker_file_list_entry::get_no_of_chunk() {
+//    return this->no_of_chunks;
+//}
+//
+//void tracker_file_list_entry::set_no_of_chunk(uint32_t num) {
+//    this->no_of_chunks = num;
+//}
 std::string tracker_peer_list_entry::generate_message() {
     std::string message = std::string(file_name) + " " + std::to_string(chunk_no) + " " +
             std::string(public_IP) + " " +  std::to_string(port_no) + "|";

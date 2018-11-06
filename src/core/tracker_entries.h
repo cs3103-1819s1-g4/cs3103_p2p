@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
-
+#include <stdio.h>
 using namespace std;
 
 class tracker_peer_list_entry {
@@ -68,13 +68,18 @@ public:
  * @param port
  */
     tracker_peer_list_entry(string message,string public_IP,int16_t port) {
-        int current = 0,next;
         try {
+//            char *cstr = new char[message.length() + 1];
+//            strcpy(cstr,message.c_str());
+//            char * ptr = nullptr;
+//            ptr = strtok(cstr," ");
+//            this->file_name = message;
+//            this->chunk_no = 5;//stoi(ptr = strtok(nullptr," "));
+
+            int current = 0,next;
             next = message.find(" ");
             this->file_name = message.substr(current,next);
-            current = next;
-            next = message.find(" ",current);
-            this->chunk_no = stoi(message.substr(current,next));
+            this->chunk_no = stoi(message.substr(next,message.length() - next));
             this->public_IP = public_IP;
             this->port_no = port;
 
@@ -114,13 +119,13 @@ class tracker_file_list_entry {
 private:
     uint8_t file_name_len;
     string file_name;
-    uint32_t no_of_chunks;
+    //uint32_t no_of_chunks;
 public:
-    tracker_file_list_entry(string file_name, uint32_t no_of_chunks) {
+    tracker_file_list_entry(string file_name) {
         assert(file_name_len > 0 && file_name_len < 256);
         try {
             this->file_name = file_name;
-            this->no_of_chunks = no_of_chunks;
+            //this->no_of_chunks = no_of_chunks;
 
         } catch (std::exception &e) {
             std::cerr << "[ERROR]: " << e.what() << "\tString copy while creating tracker entry failed\n";
@@ -134,8 +139,8 @@ public:
 
     void print_file_list_entry();
     string get_file_name();
-    uint32_t get_no_of_chunk();
-    void set_no_of_chunk(uint32_t num);
+    //uint32_t get_no_of_chunk();
+    //void set_no_of_chunk(uint32_t num);
 };
 
 #endif //CS3103_P2P_TRACKER_ENTRIES_H
