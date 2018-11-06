@@ -17,8 +17,8 @@ Storage::Storage(std::string pathToDownloadFolder) {
 }
 
 int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::string filename) {
-    std::lock_guard<std::mutex> guard(myMutex);
-
+    //std::lock_guard<std::mutex> guard(myMutex);
+    myMutex.lock();
     int numOfCharInChunk = (count * size) / sizeof(char);
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
     std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
@@ -28,6 +28,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
     if (doesFileExist(pathToFileCompleted)) {
         // should not be saving a chunk to a completed file
         lastError = "File already fully downloaded";
+        myMutex.unlock();
         return -1;
     }
 
@@ -60,6 +61,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
         if (currChunkNumber == chunkNumberToSave) {
             // if chunk to save is already downloaded
             lastError = "Chunk number for file already saved";
+            myMutex.unlock();
             return -1;
         }
 
@@ -79,6 +81,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
     myfile.close();
 
     if (!finalChunkFound) {
+        myMutex.unlock();
         return 1;
     }
 
@@ -120,6 +123,7 @@ int Storage::saveChunk(void *ptrToChunkData, size_t size, size_t count, std::str
     //std::cout<<pathToFileOfDownloading;
     //std::cout<<"\n";
 
+    myMutex.unlock();
     return 1;
 }
 
@@ -160,11 +164,13 @@ void Storage::sortAndUpdateFullyDownloadedFile(std::string filename) {
 
 int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int chunkNumber,
                       size_t *chunkTotalByteSize) {
-    std::lock_guard<std::mutex> guard(myMutex);
+    //std::lock_guard<std::mutex> guard(myMutex);
+    myMutex.lock();
 
     if (chunkNumber <= 0) {
         // chunk number should be more than 0
         lastError = "Chunk number should be more than 0";
+        myMutex.unlock();
         return -1;
     }
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
@@ -172,6 +178,7 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
     // file does not exist
     if (!doesFileExist(pathToFileCompleted) && !doesFileExist(pathToFileOfDownloading)) {
         lastError = "Downloaded file nor downloading file does not exist";
+        myMutex.unlock();
         return -1;
     }
 
@@ -203,12 +210,14 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
                 memcpy(ptrToFillWithChunkData, readChunk, fixedChunkSizeWithHeader);
 
                 is.close();
+                myMutex.unlock();
                 return 1;
             }
             count++;
         }
         is.close();
         lastError = "Chunk number cannot be found from completed file";
+        myMutex.unlock();
         return -1;
 
     } else if (doesFileExist(pathToFileOfDownloading)) {
@@ -228,15 +237,18 @@ int Storage::getChunk(void *ptrToFillWithChunkData, std::string filename, int ch
                 memcpy(readChunk + fixedChunkHeaderSize, readChunkContent, chunkContentSize);
                 memcpy(ptrToFillWithChunkData, readChunk, fixedChunkSizeWithHeader);
                 is.close();
+                myMutex.unlock();
                 return 1;
             }
         }
         is.close();
         lastError = "Chunk number cannot be found from downloading file";
+        myMutex.unlock();
         return -1;
     }
 
     lastError = "end of getChunk, this line should not be reached";
+    myMutex.unlock();
     return -1;
 }
 
@@ -260,18 +272,21 @@ bool Storage::doesFileExist(const std::string &name) {
 }
 
 bool Storage::addFileToDownloadFolder(std::string pathToFile, std::string fileName) {
-    std::lock_guard<std::mutex> guard(myMutex);
-
+    //std::lock_guard<std::mutex> guard(myMutex);
+    myMutex.lock();
     std::string pathToFileInDownloadFolder = pathToDownloadFolder + "\\" + fileName;
+    myMutex.unlock();
     return CopyFile(pathToFile.c_str(), pathToFileInDownloadFolder.c_str(), FALSE);
 }
 
 int Storage::getFinalChunkNumber(std::string fileName) {
-    std::lock_guard<std::mutex> guard(myMutex);
+    //std::lock_guard<std::mutex> guard(myMutex);
+    myMutex.lock();
 
     std::string pathToFileCompleted = pathToDownloadFolder + "/" + fileName;
     if (!doesFileExist(pathToFileCompleted)) {
         lastError = "Fully Downloaded file does not exist";
+        myMutex.unlock();
         return -1;
     }
     std::ifstream is(pathToFileCompleted, std::ios::binary);
@@ -282,24 +297,28 @@ int Storage::getFinalChunkNumber(std::string fileName) {
         is.peek();
         if (is.eof()) {
             is.close();
+            myMutex.unlock();
             return count;
         }
         count++;
     }
     is.close();
 
+    myMutex.unlock();
     return count;
 }
 
  int Storage::getArrOfChunkNumbers(int * buf, size_t maxElements, std::string filename){
-     std::lock_guard<std::mutex> guard(myMutex);
+     //std::lock_guard<std::mutex> guard(myMutex);
 
+     myMutex.lock();
      std::string pathToFileCompleted = pathToDownloadFolder + "/" + filename;
      std::string pathToFileOfDownloading = pathToDownloadFolder + "/" + filename + ".p2pdownloading";
 
      int maxCount = static_cast<int>(maxElements) - 1;
      if (!doesFileExist(pathToFileCompleted) && !doesFileExist(pathToFileOfDownloading)) {
          lastError = "Downloaded file nor downloading file does not exist";
+         myMutex.unlock();
          return -1;
      }
 
@@ -313,6 +332,7 @@ int Storage::getFinalChunkNumber(std::string fileName) {
          while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
              if(count > maxCount){
                  lastError = "Not enough int array buffer allocated for getting arr of chunk numbers";
+                 myMutex.unlock();
                  return -1;
              }
              is.read(readChunkContent, fixedChunkContentSize);
@@ -327,6 +347,7 @@ int Storage::getFinalChunkNumber(std::string fileName) {
          while (is.peek() != std::ifstream::traits_type::eof()) { // loop and search
              if(count > maxCount){
                  lastError = "Not enough int array buffer allocated for getting arr of chunk numbers";
+                 myMutex.unlock();
                  return -1;
              }
              is.read(readChunkHeader, fixedChunkHeaderSize);
@@ -338,7 +359,7 @@ int Storage::getFinalChunkNumber(std::string fileName) {
          }
          is.close();
      }
-
+     myMutex.unlock();
      return count;
  }
 
