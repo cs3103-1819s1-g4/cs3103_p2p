@@ -8,7 +8,7 @@
 #include "../core/storage.h"
 #include "stun_pkt_handler.h"
 
-#define PATH_TO_STORAGE_DIRECTORY "..\\src\\p2p_server\\files_for_seeding"
+#define PATH_TO_STORAGE_DIRECTORY "..\\to_upload"
 
 using namespace std;
 
@@ -35,7 +35,7 @@ public:
     /**
      * Constructor for P2P server
      */
-    P2P_Server() : listen_sock(INVALID_SOCKET), online(false), storage(PATH_TO_STORAGE_DIRECTORY)   {
+    explicit P2P_Server() : listen_sock(INVALID_SOCKET), online(false), storage(PATH_TO_STORAGE_DIRECTORY)   {
 
         WSADATA wsock;
         int status = WSAStartup(MAKEWORD(2,2),&wsock);

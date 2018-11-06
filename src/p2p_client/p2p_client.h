@@ -7,6 +7,7 @@
 #include <WS2tcpip.h>
 
 #include "../core/core_functions.h"
+#include "../p2p_server/p2p_server.h"
 
 #define DEFAULT_TRACKER_PORT "80"
 #define DEFAULT_P2P_SERVER_PORT "6881" // this is not used when NAT is involved
@@ -19,20 +20,12 @@ class p2p_client {
 private:
     bool online;
     const char *tracker_ip;
-    uint32_t client_ip;
+    P2P_Server *p2p_server;
 public:
     // Constructor
     explicit p2p_client(const char *tracker_ip): online{true}, tracker_ip{tracker_ip} {
-
-        /*TODO: To get client's private IP
-        in_addr temp{};
-        get_private_IP(temp);
-        client_ip = temp.s_addr;
-
-
-        std::cout << "Client running at " << inet_ntoa(temp.s_addr) << "\nTracker running at "
-         << tracker_ip << "\n";*/
-    }
+        p2p_server = new P2P_Server();
+    };
 
     void display_menu();
 
@@ -49,6 +42,8 @@ public:
 
     void quit();
 
+    bool start_p2p_server_thread();
+
     //Destructor
     ~p2p_client() {
         online = false;
@@ -57,6 +52,5 @@ public:
 };
 
 int execute_user_option(p2p_client client);
-
 
 #endif
