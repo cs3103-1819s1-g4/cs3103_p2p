@@ -224,11 +224,11 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
         exit(EXIT_FAILURE);
     }
 
-    string str = "REQUEST 4 " + LOCAL_IP_ADDRESS + " " + DEFAULT_P2P_SERVER_PORT;
+    string str = "REQUEST 4 " + LOCAL_IP_ADDRESS + " " + DEFAULT_P2P_SERVER_PORT + " ";
 
     // TODO: Modify to include public IP
     for (auto chunk_no = 1; chunk_no <= num_of_chunks; chunk_no++) {
-        str +=  " " + filename + to_string(chunk_no);
+        str +=  filename + " " + to_string(chunk_no) + "|";
     }
 
     const char *buf = str.c_str();

@@ -34,7 +34,7 @@ FLAG VALUES (values from 1 to 7)
 . Ask the tracker for the updated list. FILENAME must be filled. (eg. REQUEST 2 test.txt)
 . Inform the tracker that a chunk has been successfully downloaded. FILENAME, CHUNK NO, IP ADDRESS and PORT NO must be filled.
 (eg. REQUEST 3 test.txt 1 192.168.1.2 5667)
-. Upload a new file. FILENAME, CHUNK NO, IP ADDRESS and PORT NO must be filled. (eg. REQUEST 4 192.168.1.2 5667 test.txt 1 test.txt 2 test.txt 3)
+. Upload a new file. FILENAME, CHUNK NO, IP ADDRESS and PORT NO must be filled. (eg. REQUEST 4 192.168.1.2 5667 test.txt 1|test.txt 2|test.txt 3|)
 . Exit from swarm. IP ADDRESS and PORT NO must be filled. (eg. REQUEST 5 192.168.1.2 5667)
 . Query the tracker for a list of files available. (eg. REQUEST 6)
 . Query for a specified file. FILENAME must be filled. (eg. REQUEST 7)
