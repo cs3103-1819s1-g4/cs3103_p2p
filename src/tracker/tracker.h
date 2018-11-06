@@ -46,8 +46,8 @@ public:
 
     };
     void init();
-    string addEntry(string message,string ip,int port);
-    string addFile(string message,string ip,int port);
+    string addEntry(string message);
+    string addFile(string message);
     string query();
     string queryFile(string message);
     string generateList(string message);
