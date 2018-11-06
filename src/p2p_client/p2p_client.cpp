@@ -16,6 +16,8 @@
 
 using namespace std;
 
+string LOCAL_IP_ADDRESS("192.168.1.2"); // hardcoded
+
 // Winsock variables
 SOCKET connect_socket;
 WSAData wsa_data;
@@ -133,7 +135,7 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
             this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(), false);
 
-            str = "DOWNLOAD " + filename + " " + p2p_server_port_num;
+            str = "DOWNLOAD " + filename + " " + p2p_server_chunk_num;
             const char *buf_tcp = str.c_str();
 
             iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
@@ -222,12 +224,11 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
         exit(EXIT_FAILURE);
     }
 
-    string str = "REQUEST 4 ";
+    string str = "REQUEST 4 " + LOCAL_IP_ADDRESS + " " + DEFAULT_P2P_SERVER_PORT;
 
-    // Eg. REQUEST 4 test.txt 1 test.txt 2 test.txt 3
     // TODO: Modify to include public IP
     for (auto chunk_no = 1; chunk_no <= num_of_chunks; chunk_no++) {
-        str += filename + " " + to_string(chunk_no) + "|"; // TODO: Not exactly what I want..
+        str +=  " " + filename + to_string(chunk_no);
     }
 
     const char *buf = str.c_str();
@@ -247,7 +248,8 @@ void p2p_client::inform_tracker_downloaded_chunk(char *tracker_port, string file
 
     this->connection(this->tracker_ip, tracker_port, true);
 
-    string str = "REQUEST 3 " + filename + " " + chunk_num;
+    string str = "REQUEST 3 " + filename + " " + chunk_num + " " + LOCAL_IP_ADDRESS + " " +
+            DEFAULT_P2P_SERVER_PORT;
 
     const char *buf = str.c_str();
     sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
