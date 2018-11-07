@@ -7,8 +7,7 @@
 #include "../core/p2p_request_response_packet.h"
 #include "../core/storage.h"
 #include "stun_pkt_handler.h"
-
-#define PATH_TO_STORAGE_DIRECTORY "..\\to_upload"
+#include <sstream>
 
 using namespace std;
 
@@ -78,6 +77,7 @@ public:
      * @return true as long as a reply is sent (even if chunk retrieval is unsuccessful). false otherwise.
      */
     bool process_request(sockaddr_in client_addr, int sin_size);
+    pair<string, string> parse_packet();
     bool get_public_ip_stun();
     bool get_public_ip_stun2(char * return_ip_port, char * default_private_server_port);
     int stun_xor_addr(const char * stun_server_ip,short stun_server_port,short local_port,char * return_ip_port);

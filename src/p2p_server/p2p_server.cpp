@@ -101,12 +101,12 @@ bool P2P_Server::listen() {
 
 bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
 
-    auto *request = (struct P2P_request_pkt *)recv_buffer;
     size_t chunk_size;
+    pair<string, string> filename_chunk_no_pair = parse_packet();
+    string filename = filename_chunk_no_pair.first;
+    int chunk_no = strtol(filename_chunk_no_pair.second.c_str(), nullptr, 10);
 
-    assert(request->flag == 3);
-
-    if(storage->getChunk(chunk_buffer, request->file_name, request->chunk_no, &chunk_size) != -1) {
+    if(storage->getChunk(chunk_buffer, filename, chunk_no, &chunk_size) != -1) {
 
         strcpy_s(send_buffer, chunk_size - FIXED_CHUNK_HEADER_SIZE, chunk_buffer + FIXED_CHUNK_HEADER_SIZE);
 
@@ -115,8 +115,8 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
             WSACleanup();
             return false;
         }
-        cout << "Successfully sent a chunk\nFile: " << request->file_name << "\tChunk no: "
-             << request->chunk_no << "\nPeer IP address: " << inet_ntoa(client_addr.sin_addr) << "\tPort no: "
+        cout << "Successfully sent a chunk\nFile: " << filename << "\tChunk no: "
+             << chunk_no << "\nPeer IP address: " << inet_ntoa(client_addr.sin_addr) << "\tPort no: "
              << ntohs(client_addr.sin_port) << "\n";
 
     } else {
@@ -131,6 +131,23 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
     }
     return true;
 }
+
+pair<string, string> P2P_Server::parse_packet() {
+
+    /* Variables to tokenise string*/
+    string recv_buffer_str(recv_buffer);
+    vector<string> str_token;
+    stringstream check1(recv_buffer);
+    string intermediate;
+
+    while(getline(check1, intermediate, ' ')) {
+        str_token.push_back(intermediate);
+    }
+
+    assert((str_token[0] == "DOWNLOAD") == 0);
+
+    return {str_token[1], str_token[2]};
+};
 
 // TODO: use listening socket or have a seperate socket
 bool P2P_Server::get_public_ip_stun() {
