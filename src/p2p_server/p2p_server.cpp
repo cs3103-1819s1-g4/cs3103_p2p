@@ -64,12 +64,11 @@ bool P2P_Server::listen() {
     int bytes_recv;
 
     //configure file descriptors and timeout
-    time_listen_sock.tv_sec = 50;
+    time_listen_sock.tv_sec = 1000000;
     time_listen_sock.tv_usec = 0;
     FD_ZERO(&read_fd_listen_sock);
     FD_SET(listen_sock, &read_fd_listen_sock); // always look for connection attempts
 
-    cout << "P2P client server listening...\n";
     if( (status = select(listen_sock + 1, &read_fd_listen_sock, nullptr, nullptr, &time_listen_sock)) == SOCKET_ERROR ) {
         std::cout << "[ERROR]: " << WSAGetLastError() << " Select with socket failed\n";
         closesocket(listen_sock);
@@ -82,6 +81,8 @@ bool P2P_Server::listen() {
         return false;
     } else {
         while(true) {
+            cout << "P2P client server listening...\n";
+
             if ((bytes_recv = recvfrom(listen_sock, recv_buffer, MAX_BUFFER_LEN, 0, (struct sockaddr *)&client_addr,
                                        &sin_size)) == SOCKET_ERROR) {
                 cout << "[ERROR]: " << WSAGetLastError() << "\tReceive at socket failed\n";
@@ -102,20 +103,22 @@ bool P2P_Server::listen() {
 bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
 
     size_t chunk_size;
+
     pair<string, string> filename_chunk_no_pair = parse_packet();
     string filename = filename_chunk_no_pair.first;
     int chunk_no = strtol(filename_chunk_no_pair.second.c_str(), nullptr, 10);
 
     if(storage->getChunk(chunk_buffer, filename, chunk_no, &chunk_size) != -1) {
+        cout << "Obtained filename and chunk no from storage: " << filename << "\t" << chunk_no << "\n";
 
-        strcpy_s(send_buffer, chunk_size - FIXED_CHUNK_HEADER_SIZE, chunk_buffer + FIXED_CHUNK_HEADER_SIZE);
+        strcpy_s(send_buffer, chunk_size, chunk_buffer);
 
         if(sendto(listen_sock, send_buffer, strlen(send_buffer), 0, (sockaddr *)&client_addr, sin_size) == SOCKET_ERROR) {
             cout << "[ERROR]: " << WSAGetLastError() << "\tSend to socket failed\n";
             WSACleanup();
             return false;
         }
-        cout << "Successfully sent a chunk\nFile: " << filename << "\tChunk no: "
+        cout << "Successfully sent a chunk\tFile: " << filename << "\tChunk no: "
              << chunk_no << "\nPeer IP address: " << inet_ntoa(client_addr.sin_addr) << "\tPort no: "
              << ntohs(client_addr.sin_port) << "\n";
 
@@ -144,7 +147,7 @@ pair<string, string> P2P_Server::parse_packet() {
         str_token.push_back(intermediate);
     }
 
-    assert((str_token[0] == "DOWNLOAD") == 0);
+    //assert((str_token[0] == "DOWNLOAD") == 0);
 
     return {str_token[1], str_token[2]};
 };

@@ -12,7 +12,7 @@
 using namespace std;
 
 const char CHUNK_NOT_FOUND_ERROR[] = "CHUNK NOT FOUND";
-const int MAX_BUFFER_LEN = 2048;
+const int MAX_BUFFER_LEN = 65536;
 
 class P2P_Server {
 private:
@@ -47,8 +47,8 @@ public:
         get_private_IP(p2p_server_private_ip);
 
         recv_buffer = (char *)malloc(MAX_BUFFER_LEN);
-        send_buffer = (char *)malloc(FIXED_CHUNK_CONTENT_SIZE);
-        chunk_buffer = (char *)malloc(FIXED_CHUNK_SIZE);
+        send_buffer = (char *)malloc(MAX_BUFFER_LEN);
+        chunk_buffer = (char *)malloc(MAX_BUFFER_LEN);
     };
 
     /**
