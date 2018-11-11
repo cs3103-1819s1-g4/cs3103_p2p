@@ -347,17 +347,3 @@ int execute_user_option(p2p_client client) {
        }
 
 }
-
-bool p2p_client::start_p2p_server_thread() {
-
-    if (!p2p_server->start(DEFAULT_P2P_SERVER_PORT)) {
-        cout << "Failed to start server";
-        return false;
-    } else {
-        //p2p_server->get_public_ip_stun();
-        char ip_port[50];
-//        p2p_server->get_public_ip_stun2(ip_port, DEFAULT_P2P_SERVER_PORT);
-        p2p_server->listen();
-    }
-    return true;
-};
