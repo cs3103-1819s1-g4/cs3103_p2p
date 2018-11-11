@@ -11,7 +11,6 @@
 
 #define DEFAULT_TRACKER_PORT "80"
 #define DEFAULT_P2P_SERVER_PORT "6881" // this is not used when NAT is involved
-#define PATH_TO_STORAGE_DIRECTORY "..\\to_upload"
 
 using namespace std;
 
@@ -22,16 +21,14 @@ private:
     bool online;
     const char *tracker_ip;
     in_addr p2p_client_private_ip;
-    P2P_Server *p2p_server;
     Storage *p2p_client_storage;
 public:
     // Constructor
-    explicit p2p_client(const char *tracker_ip) {
+    explicit p2p_client(const char *tracker_ip, Storage *storage) {
         online = true;
         this->tracker_ip = tracker_ip;
         get_private_IP(p2p_client_private_ip);
-        p2p_client_storage = new Storage(PATH_TO_STORAGE_DIRECTORY);
-        p2p_server = new P2P_Server(p2p_client_storage);
+        p2p_client_storage = storage;
     };
 
     void display_menu();
@@ -50,13 +47,10 @@ public:
 
     void quit(char *tracker_port);
 
-    bool start_p2p_server_thread();
-
     //Destructor
     ~p2p_client() {
         online = false;
         tracker_ip = nullptr;
-        p2p_server = nullptr;
     }
 };
 
