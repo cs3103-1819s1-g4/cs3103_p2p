@@ -452,6 +452,8 @@ int p2p_server::send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data
         return "";
     }
 
+    bytes_recieved = recv(sock,recv_data,1024,0);
+
     string dataToSend = public_TURN_ip_of_dest;
     dataToSend.append(' ');
     dataToSend.append(data, 0, num_bytes_of_data_to_send);
