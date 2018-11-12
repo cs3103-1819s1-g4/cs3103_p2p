@@ -151,15 +151,16 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             const char *buf_udp = str.c_str();
 
             iresult = sendto(connect_socket, buf_udp, strlen(buf_udp), 0, ptr->ai_addr, ptr->ai_addrlen);
+            int recvSize;
             iresult = recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
-
+            recvSize = iresult;
             cout << "Received the chunk!" << endl;
             string temp(recvbuf);
             cout << temp << endl;
 
             // p2p_server will send me just the chunk data...
 //            Storage storage("..\\download");
-            (this->p2p_client_storage)->saveChunk(recvbuf, sizeof(char), strlen(recvbuf), filename);
+            (this->p2p_client_storage)->saveChunk(recvbuf, sizeof(char), recvSize, filename);
 
             closesocket(connect_socket);
             memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf

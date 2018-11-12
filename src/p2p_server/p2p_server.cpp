@@ -111,9 +111,10 @@ bool P2P_Server::process_request(sockaddr_in client_addr, int sin_size) {
     if(storage->getChunk(chunk_buffer, filename, chunk_no, &chunk_size) != -1) {
         cout << "Obtained filename and chunk no from storage: " << filename << "\t" << chunk_no << "\n";
 
-        strcpy_s(send_buffer, chunk_size, chunk_buffer);
+        //strcpy_s(send_buffer, chunk_size, chunk_buffer);
+        memcpy(send_buffer,chunk_buffer,chunk_size);
 
-        if(sendto(listen_sock, send_buffer, strlen(send_buffer), 0, (sockaddr *)&client_addr, sin_size) == SOCKET_ERROR) {
+        if(sendto(listen_sock, send_buffer, chunk_size, 0, (sockaddr *)&client_addr, sin_size) == SOCKET_ERROR) {
             cout << "[ERROR]: " << WSAGetLastError() << "\tSend to socket failed\n";
             WSACleanup();
             return false;
