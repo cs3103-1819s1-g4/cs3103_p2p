@@ -2,7 +2,7 @@
 // Created by Jarrett on 22/10/2018.
 //
 
-// start_p2p_client starts the P2P client
+// start_p2p_client starts the P2P client AND the P2P server
 
 #include <iostream>
 #include <cstdio>

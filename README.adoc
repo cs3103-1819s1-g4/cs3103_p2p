@@ -1,5 +1,17 @@
 = CS3103_p2p
 
+== Instructions to run code
+
+Our source code is Windows-dependent, and thus could only run on Windows. We used Windows 10.
+
+Recommended way to compile the code is to first install CLion https://www.jetbrains.com/clion/download/#section=windows[here].
+
+Next, install Visual Studio Community https://visualstudio.microsoft.com/downloads/[here], if you have not.
+
+After which, you can then load the source code into CLion and build it. Run p2p_client.exe. (Should we only include the executable file in the submissions, just in case?)
+
+Tracker's IP address is given as 18.136.125.209.
+
 == Protocol Design (With NAT, with central tracker)
 
 === Communication between tracker and p2p client
