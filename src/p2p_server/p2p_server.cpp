@@ -355,3 +355,109 @@ int P2P_Server::stun_xor_addr(const char * stun_server_ip,short stun_server_port
 
     return 0;
 }
+
+bool p2p_server::setupSocketForSignallerServer(){
+    std::string private_ip = inet_ntoa(p2p_client_private_ip);
+    struct addrinfo *result = nullptr, hints{};
+    int status;
+
+    ZeroMemory(&result, sizeof(result));
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_flags = AI_PASSIVE; // to allow binding
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = IPPROTO_UDP;
+
+    status = getaddrinfo(private_ip, "6883", &hints, &result);
+    if (status != 0) {
+        std::cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
+        return false;
+    }
+
+    SOCKET serv_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (serv_sock == INVALID_SOCKET) {
+        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket.\n";
+        freeaddrinfo(result);
+        return false;
+    }
+
+    if (::bind(serv_sock, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
+        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
+        freeaddrinfo(result);
+        closesocket(serv_sock);
+        return false;
+    }
+
+    freeaddrinfo(result);
+    signaller_sock = serv_sock;
+    return true;
+}
+
+string p2p_server::get_signaller_public_ip_port() {
+    std::string signal_server_ip = "18.136.118.72";
+    int signal_server_port = 6883;
+    struct sockaddr_in servaddr;
+    const int MAXLINE = 32;
+    char buf[MAXLINE];
+    int i;
+    char bindingReq[20];
+    strcpy(bindingReq, "getPublic");
+
+    // server
+    memset(&servaddr, 0, sizeof(servaddr)); //sets all bytes of servaddr to 0
+    servaddr.sin_family = AF_INET;
+    inet_pton(AF_INET, signal_server_ip, &servaddr.sin_addr);
+    servaddr.sin_port = htons(signal_server_port);
+
+    sendto(signaller_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+
+    Sleep(1);
+    // TODO timeout
+    int recv = recvfrom(signaller_sock,(char *)buf,MAXLINE, 0, nullptr, nullptr);
+    buf[recv] = '\0';
+    return string(buf);
+}
+
+int p2p_server::read_from_signal_public_ip(char* data, int max_bytes_of_data_buffer_allocated){
+    int bytes_recieved = recv(signaller_sock,data,max_bytes_of_data_buffer_allocated,0);
+    return bytes_recieved;
+}
+
+int p2p_server::send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data, int num_bytes_of_data_to_send){
+    string signal_server_ip = "18.136.118.72";
+    int bytes_recieved;  
+    string send_data[1024] = "getPublic";
+    char recv_data[1024];
+    struct hostent *host;
+    struct sockaddr_in server_addr;  
+
+    host = gethostbyname(signal_server_ip);
+
+    sock = socket(AF_INET, SOCK_STREAM,0);
+        if (connect_socket == INVALID_SOCKET) {
+            printf("socket failed with error: %ld\n", WSAGetLastError());
+            WSACleanup();
+            exit(EXIT_FAILURE);
+        }
+
+    server_addr.sin_family = AF_INET;     
+    server_addr.sin_port = htons(6882);   
+    server_addr.sin_addr = *((struct in_addr *)host->h_addr);
+    bzero(&(server_addr.sin_zero),8); 
+
+    //connect to server at port 5000
+    if (connect(sock, (struct sockaddr *)&server_addr,
+                sizeof(struct sockaddr)) == -1) 
+    {
+        return "";
+    }
+
+    string dataToSend = public_TURN_ip_of_dest;
+    dataToSend.append(' ');
+    dataToSend.append(data, 0, num_bytes_of_data_to_send);
+    send(sock,dataToSend,strlen(dataToSend), 0); 
+        
+    closesocket(sock);
+
+    return 1;
+}
