@@ -142,18 +142,19 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
             // If the connection fails, try again...
             if (this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(),
-                    true) == -1) {
+                    false) == -1) {
                 this->ask_updated_peer_list(DEFAULT_TRACKER_PORT, filename);
                 continue;
             }
 
             str = "DOWNLOAD " + filename + " " + p2p_server_chunk_num;
-            const char *buf_udp = str.c_str();
+            const char *buf_tcp = str.c_str();
 
-            iresult = sendto(connect_socket, buf_udp, strlen(buf_udp), 0, ptr->ai_addr, ptr->ai_addrlen);
+            iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
+
             int recvSize;
-            iresult = recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
-            recvSize = iresult;
+            recvSize = recv(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0);
+
             cout << "Received the chunk!" << endl;
             string temp(recvbuf);
             cout << temp << endl;
