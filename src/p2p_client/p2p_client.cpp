@@ -30,7 +30,6 @@ map <int, tracker_peer_list_entry> peer_list;
 string filename;
 
 void p2p_client::display_menu() {
-
     printf("******P2P CLIENT******\n"
            "Enter options (1 to 5):\n"
            "\t1. Download a file\n"
@@ -431,7 +430,7 @@ int p2p_client::send_to_signal_public_ip(string public_signaller_ip_of_dest, cha
     return 1; 
 }
 
-string p2p_client::connect_to_TURN_get_public_ip(SOCKET sock){
+string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
     string signal_server_ip = "18.136.118.72";
     int bytes_recieved;  
     string send_data = "getPublic";
@@ -441,7 +440,7 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET sock){
 
     host = gethostbyname(signal_server_ip.c_str());
 
-    sock = socket(AF_INET, SOCK_STREAM,0);
+    *sock = socket(AF_INET, SOCK_STREAM,0);
         if (connect_socket == INVALID_SOCKET) {
             printf("socket failed with error: %ld\n", WSAGetLastError());
             WSACleanup();
@@ -455,15 +454,15 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET sock){
 
 
     //connect to server at port 5000
-    if (connect(sock, (struct sockaddr *)&server_addr,
+    if (connect(*sock, (struct sockaddr *)&server_addr,
                 sizeof(struct sockaddr)) == -1) 
     {
         return "";
     }
-    send(sock,send_data.c_str(),send_data.length(), 0);
+    send(*sock,send_data.c_str(),send_data.length(), 0);
         
     //get reply from server  
-    bytes_recieved=recv(sock,recv_data,1024,0);
+    bytes_recieved=recv(*sock,recv_data,1024,0);
     recv_data[bytes_recieved] = '\0';
 
     return string(recv_data);
@@ -473,3 +472,20 @@ int p2p_client::read_from_TURN_public_ip(SOCKET sock, char* data, int max_bytes_
     int bytes_received=recv(sock,data,max_bytes_of_data_buffer_allocated,0);
     return bytes_received;
 }
+
+//void p2p_client::testTURN(){
+////    SOCKET temp;
+////    string mystring = connect_to_TURN_get_public_ip(&temp);
+////    cout << mystring << endl;
+////    char buff[8000];
+////    int readed = read_from_TURN_public_ip(temp,buff,8000);
+////    buff[readed] = '\0';
+////    cout << buff << endl;
+//     setupSocketForSignallerServer();
+//     string signalIP =  get_signaller_public_ip_port();
+//     cout<<signalIP<<endl;
+//     char buff[30];
+//     char tempstr[] = "hello2shoe\0";
+//     strcpy(buff,tempstr);
+//     send_to_signal_public_ip("175.156.181.183:5071",buff,10);
+//;}

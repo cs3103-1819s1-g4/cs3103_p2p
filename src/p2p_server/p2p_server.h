@@ -90,7 +90,8 @@ public:
     int read_from_signal_public_ip(char* data, int max_bytes_of_data_buffer_allocated);
     // send data to TURN to relay to dest, returns 1 if success
     int send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data, int num_bytes_of_data_to_send);
-
+    // an example on how to use the functions
+    //void testTURN();
 };
 
 #endif //CS3103_P2P_P2P_SERVER_H

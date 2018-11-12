@@ -9,7 +9,7 @@ void P2P_Server::stop() {
 }
 
 bool P2P_Server::start(const char *port) {
-
+    //testTURN();
     stop();
 
     struct addrinfo *result = nullptr, hints{};
@@ -453,14 +453,29 @@ int P2P_Server::send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data
         return -1;
     }
 
-    bytes_recieved = recv(sock,recv_data,1024,0);
 
     string dataToSend = public_TURN_ip_of_dest;
-    dataToSend.append(" ");
-    dataToSend.append(data, 0, num_bytes_of_data_to_send);
     send(sock,dataToSend.c_str(),dataToSend.length(), 0);
-        
+    bytes_recieved = recv(sock,recv_data,1024,0);
+    send(sock,data,num_bytes_of_data_to_send, 0);
+
     closesocket(sock);
 
     return 1;
 }
+
+//void P2P_Server::testTURN(){
+////    setupSocketForSignallerServer();
+////    string temp = get_signaller_public_ip_port();
+////    cout<<temp<<endl;
+////    char buff[8000];
+////    int readed = read_from_signal_public_ip(buff,8000);
+////    buff[readed] = '\0';
+////    cout << buff << endl;
+//
+//     char buff[30];
+//     char tempstr[] = "hello2shoe\0";
+//     strcpy(buff,tempstr);
+//    send_to_TURN_public_ip("175.156.181.183:5021",buff,10);
+//
+//;}

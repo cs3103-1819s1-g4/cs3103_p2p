@@ -51,10 +51,11 @@ public:
     // send data to signaller to relay to dest, returns 1 if success
     int send_to_signal_public_ip(string public_signaller_ip_of_dest, char* data, int num_bytes_of_data_to_send);
     // connect to TURN with socket (pass in a blank socket socket)
-    string connect_to_TURN_get_public_ip(SOCKET sock);
+    string connect_to_TURN_get_public_ip(SOCKET* sock);
     // returns number of bytes read from TURN socket and bytes stored in to buffer
     int read_from_TURN_public_ip(SOCKET sock,char* data, int max_bytes_of_data_buffer_allocated);
-
+    //an example of how to use the functions
+    //void testTURN();
 
     void quit(char *tracker_port);
 
