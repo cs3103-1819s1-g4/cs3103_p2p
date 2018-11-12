@@ -361,8 +361,8 @@ bool p2p_client::setupSocketForSignallerServer(){
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
-
-    status = getaddrinfo(private_ip, "6883", &hints, &result);
+    string port = "6883";
+    status = getaddrinfo(private_ip.c_str(), port.c_str(), &hints, &result);
     if (status != 0) {
         cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
         return false;
@@ -394,14 +394,13 @@ string p2p_client::get_signaller_public_ip_port() {
     struct sockaddr_in servaddr;
     const int MAXLINE = 32;
     char buf[MAXLINE];
-    int i;
     char bindingReq[20];
     strcpy(bindingReq, "getPublic");
 
     // server
     memset(&servaddr, 0, sizeof(servaddr)); //sets all bytes of servaddr to 0
     servaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, signal_server_ip, &servaddr.sin_addr);
+    inet_pton(AF_INET, signal_server_ip.c_str(), &servaddr.sin_addr);
     servaddr.sin_port = htons(signal_server_port);
 
     sendto(signaller_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
@@ -417,31 +416,30 @@ int p2p_client::send_to_signal_public_ip(string public_signaller_ip_of_dest, cha
     string signal_server_ip = "18.136.118.72";
     int signal_server_port = 6883;
     struct sockaddr_in servaddr;
-    int i;
     string dataToSend = public_signaller_ip_of_dest;
-    dataToSend.append(' ');
+    dataToSend.append(" ");
     dataToSend.append(data, 0, num_bytes_of_data_to_send);
     // server
     memset(&servaddr, 0, sizeof(servaddr)); //sets all bytes of servaddr to 0
     servaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, signal_server_ip, &servaddr.sin_addr);
+    inet_pton(AF_INET, signal_server_ip.c_str(), &servaddr.sin_addr);
     servaddr.sin_port = htons(signal_server_port);
 
     // Send stun packet
-    sendto(signaller_sock, dataToSend, strlen(dataToSend), 0, (struct sockaddr *)&servaddr, sizeof(servaddr))
+    sendto(signaller_sock, dataToSend.c_str(), dataToSend.length(), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
     return 1; 
 }
 
-string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
+string p2p_client::connect_to_TURN_get_public_ip(SOCKET sock){
     string signal_server_ip = "18.136.118.72";
     int bytes_recieved;  
-    string send_data[1024] = "getPublic";
+    string send_data = "getPublic";
     char recv_data[1024];
     struct hostent *host;
     struct sockaddr_in server_addr;  
 
-    host = gethostbyname(signal_server_ip);
+    host = gethostbyname(signal_server_ip.c_str());
 
     sock = socket(AF_INET, SOCK_STREAM,0);
         if (connect_socket == INVALID_SOCKET) {
@@ -450,10 +448,11 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
             exit(EXIT_FAILURE);
         }
 
-    server_addr.sin_family = AF_INET;     
-    server_addr.sin_port = htons(6882);   
-    server_addr.sin_addr = *((struct in_addr *)host->h_addr);
-    bzero(&(server_addr.sin_zero),8); 
+    memset(&server_addr, 0, sizeof(server_addr)); //sets all bytes of servaddr to 0
+    server_addr.sin_family = AF_INET;
+    inet_pton(AF_INET, signal_server_ip.c_str(), &server_addr.sin_addr);
+    server_addr.sin_port = htons(6882);
+
 
     //connect to server at port 5000
     if (connect(sock, (struct sockaddr *)&server_addr,
@@ -461,7 +460,7 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
     {
         return "";
     }
-    send(sock,send_data,strlen(send_data), 0); 
+    send(sock,send_data.c_str(),send_data.length(), 0);
         
     //get reply from server  
     bytes_recieved=recv(sock,recv_data,1024,0);
@@ -470,7 +469,7 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
     return string(recv_data);
 }
 
-int p2p_client::read_from_TURN_public_ip(SOCKET* sock, char* data, int max_bytes_of_data_buffer_allocated){
-    int bytes_recieved=recv(sock,data,max_bytes_of_data_buffer_allocated,0);
-    return bytes_recieved;
+int p2p_client::read_from_TURN_public_ip(SOCKET sock, char* data, int max_bytes_of_data_buffer_allocated){
+    int bytes_received=recv(sock,data,max_bytes_of_data_buffer_allocated,0);
+    return bytes_received;
 }
