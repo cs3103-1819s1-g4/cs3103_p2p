@@ -83,7 +83,7 @@ public:
     bool get_public_ip_stun2(char * return_ip_port, char * default_private_server_port);
     int stun_xor_addr(const char * stun_server_ip,short stun_server_port,short local_port,char * return_ip_port);
 
-    // These functions are involved p2p_client and TURN and Signaller communication
+    // These functions are involved p2p_server and TURN and Signaller communication
     bool setupSocketForSignallerServer();
     string get_signaller_public_ip_port(); //"192.168.1.1:5000"
     // returns number of bytes read from signaller
