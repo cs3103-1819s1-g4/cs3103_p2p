@@ -99,20 +99,65 @@ int p2p_client::connection(const char *ip_addr, const char *port_num, bool is_tr
 
 void p2p_client::download_file(char *tracker_port, string filename) {
 
+    // variables for socket listening descriptors
+    struct timeval time_connect_socket{};
+    fd_set read_fd_connect_socket;
+    int sent_pkt_count = 0;
+    bool recv_tracker_reply = false;
+
     this->connection(this->tracker_ip, tracker_port, true);
 
     string str = "REQUEST 1 " + filename;
     const char *buf = str.c_str();
 
-    iresult = sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
-    iresult = recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
+    //configure file descriptors and timeout
+    time_connect_socket.tv_sec = 2;
+    time_connect_socket.tv_usec = 0;
+    FD_ZERO(&read_fd_connect_socket);
+    FD_SET(connect_socket, &read_fd_connect_socket); // always look for connection attempts
+
+    while (sent_pkt_count != 3) {
+        iresult = sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
+        sent_pkt_count++;
+        if ((iresult = select(connect_socket + 1, &read_fd_connect_socket, nullptr, nullptr, &time_connect_socket))
+            == SOCKET_ERROR) {
+            cout << "[ERROR]: " << WSAGetLastError() << " Select with socket failed\n";
+            closesocket(connect_socket);
+            return;
+
+            // If no reply from tracker, resend packet
+        } else if (iresult == 0) {
+            cout << "No reply from tracker, resending request, count = " << sent_pkt_count << "\n";
+            continue;
+
+        } else {
+            iresult = recvfrom(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0, nullptr, nullptr);
+            if (iresult == SOCKET_ERROR) {
+                std::cout << "[ERROR]: " << WSAGetLastError() << "\tReceive at socket failed\n";
+                closesocket(connect_socket);
+                WSACleanup();
+                return;
+            }
+            recvbuf[iresult] = '\0';
+            recv_tracker_reply = true;
+            break;
+        }
+    }
+
+    closesocket(connect_socket);
+    WSACleanup();
+
+    // If failed to receive tracker reply, exit
+    if (!recv_tracker_reply) {
+        cout << "Failed to receive tracker reply, pls try again...\n";
+        WSACleanup();
+        return;
+    }
 
     string recv_str(recvbuf);
     int peer_list_size = parse_peer_list(peer_list, recvbuf);
 
-    closesocket(connect_socket);
     memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
-    WSACleanup();
 
     // The following part deals with connection to p2p server
     // TODO: Connect to p2p_server.. almost done..
