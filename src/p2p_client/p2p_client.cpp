@@ -150,6 +150,13 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             str = "DOWNLOAD " + filename + " " + p2p_server_chunk_num;
             const char *buf_tcp = str.c_str();
 
+            // Connect to server.
+            iresult = connect( connect_socket, ptr->ai_addr, (int)ptr->ai_addrlen);
+            if (iresult == SOCKET_ERROR) {
+                closesocket(connect_socket);
+                connect_socket = INVALID_SOCKET;
+                continue;
+            }
             iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
 
             int recvSize;
@@ -172,7 +179,12 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             downloaded_chunks++;
 
             // Once the chunk is downloaded, inform the tracker
-            this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
+        }
+        this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
+        if((this->p2p_client_storage)->getFinalChunkNumber(filename) != -1)
+        {
+            printf("File Complete\n");
+            break;
         }
     }
 
