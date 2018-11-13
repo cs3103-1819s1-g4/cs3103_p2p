@@ -85,6 +85,9 @@ bool P2P_Server::listen() {
 
         client_thread.detach();
     }
+
+    WSACleanup();
+    closesocket(listen_sock);
 }
 
 bool P2P_Server::process_request(SOCKET& client_sock) {
@@ -100,7 +103,6 @@ bool P2P_Server::process_request(SOCKET& client_sock) {
     if(recv_buffer == nullptr || send_buffer == nullptr) {
         cout << "[ERROR]: " << GetLastError() << " Not enough memory to allocate to send/recv buffer\n";
         closesocket(client_sock);
-        WSACleanup();
         return false;
     }
 
@@ -112,7 +114,6 @@ bool P2P_Server::process_request(SOCKET& client_sock) {
         } else if (iresult < 0) {
             cout << "[ERROR]: " << WSAGetLastError() << " Error receiving data from client\n";
             closesocket(client_sock);
-            WSACleanup();
             return false;
         } else {
 
@@ -129,7 +130,6 @@ bool P2P_Server::process_request(SOCKET& client_sock) {
                 if (iresult == SOCKET_ERROR) {
                     cout << "[ERROR]: " << WSAGetLastError() << "\tSend to client socket failed\n";
                     closesocket(client_sock);
-                    WSACleanup();
                     return false;
                 }
                 cout << "Bytes sent: " << iresult << "\n";
@@ -140,7 +140,6 @@ bool P2P_Server::process_request(SOCKET& client_sock) {
                 if (send(listen_sock, send_buffer, sizeof(CHUNK_NOT_FOUND_ERROR), 0) == SOCKET_ERROR) {
                     cout << "[ERROR]: " << WSAGetLastError() << "\tSend to socket failed\n";
                     closesocket(client_sock);
-                    WSACleanup();
                     return false;
                 }
             }
@@ -151,13 +150,11 @@ bool P2P_Server::process_request(SOCKET& client_sock) {
     if(iresult == SOCKET_ERROR) {
         cout << "[ERROR]: " << WSAGetLastError() << "\tShutdown with client failed\n";
         closesocket(client_sock);
-        WSACleanup();
         return false;
     }
 
     cout << "Connection with client has finished successfully" << "\n";
     closesocket(client_sock);
-    WSACleanup();
     return true;
 }
 
