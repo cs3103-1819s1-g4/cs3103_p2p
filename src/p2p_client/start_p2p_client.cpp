@@ -62,9 +62,6 @@ void start_p2p_server_thread(Storage& storage) {
     if (!p2p_server.start(DEFAULT_P2P_SERVER_PORT)) {
         cout << "Failed to start server";
     } else {
-        //p2p_server->get_public_ip_stun();
-        char ip_port[50];
-        //p2p_server->get_public_ip_stun2(ip_port, DEFAULT_P2P_SERVER_PORT);
         p2p_server.listen();
     }
 }
