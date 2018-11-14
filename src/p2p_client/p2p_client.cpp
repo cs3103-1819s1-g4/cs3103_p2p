@@ -18,7 +18,7 @@ using namespace std;
 
 // Winsock variables
 SOCKET connect_socket;
-SOCKET signaller_sock;
+string *signal_public_ip;
 WSAData wsa_data;
 struct addrinfo *result = nullptr,
         *ptr = nullptr,
@@ -429,34 +429,15 @@ int execute_user_option(p2p_client client) {
 
 }
 
-bool p2p_client::setupSocketForSignallerServer(SOCKET* serv_sock){
-    signaller_sock = *serv_sock;
+bool p2p_client::linkSignalPublicIpPort(string* signal_public_ip2){
+    signal_public_ip = signal_public_ip2;
+    //cout<<"My Public Ip" << *signal_public_ip << endl;
     return true;
 }
 
 
 string p2p_client::get_signaller_public_ip_port() {
-    string signal_server_ip = "18.136.118.72";
-    int signal_server_port = 6883;
-    struct sockaddr_in servaddr;
-    const int MAXLINE = 32;
-    char buf[MAXLINE];
-    char bindingReq[20];
-    strcpy(bindingReq, "getPublic");
-
-    // server
-    memset(&servaddr, 0, sizeof(servaddr)); //sets all bytes of servaddr to 0
-    servaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, signal_server_ip.c_str(), &servaddr.sin_addr);
-    servaddr.sin_port = htons(signal_server_port);
-
-    sendto(signaller_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
-
-    Sleep(1000);
-    // TODO timeout
-    int recv = recvfrom(signaller_sock,(char *)buf,MAXLINE, 0, nullptr, nullptr);
-    buf[recv] = '\0';
-    return string(buf);
+    return string(signal_public_ip->c_str());
 }
 
 int p2p_client::send_to_signal_public_ip(string public_signaller_ip_of_dest, char* data, int num_bytes_of_data_to_send){
@@ -472,8 +453,10 @@ int p2p_client::send_to_signal_public_ip(string public_signaller_ip_of_dest, cha
     inet_pton(AF_INET, signal_server_ip.c_str(), &servaddr.sin_addr);
     servaddr.sin_port = htons(signal_server_port);
 
+    SOCKET s = socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
+
     // Send stun packet
-    sendto(signaller_sock, dataToSend.c_str(), dataToSend.length(), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+    sendto(s, dataToSend.c_str(), dataToSend.length(), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
     return 1; 
 }

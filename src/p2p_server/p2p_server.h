@@ -19,7 +19,8 @@ class P2P_Server {
 private:
     bool online;
     SOCKET listen_sock;
-    SOCKET signaller_sock;
+    string *signal_public_ip;
+    SOCKET signal_sock;
     in_addr p2p_server_private_ip;
     Storage *storage;
 public:
@@ -50,14 +51,14 @@ public:
 
     bool start(const char *port);
     void stop();
-    bool listen();
+    bool listen(string& signal_public_ip);
 
     bool process_request(string request);
     tuple<string, string, string> parse_packet(char *recv_buffer);
 
     // These functions are involved p2p_server and TURN and Signaller communication
-    bool setupSocketForSignallerServer(SOCKET * signalsock);
-    string get_signaller_public_ip_port(); //"192.168.1.1:5000"
+    bool setupSocketForSignallerServer();
+    void send_signaller_public_ip_port(); //"192.168.1.1:5000"
     // returns number of bytes read from signaller
     int read_from_signal_public_ip(char* data, int max_bytes_of_data_buffer_allocated);
     // send data to TURN to relay to dest, returns 1 if success

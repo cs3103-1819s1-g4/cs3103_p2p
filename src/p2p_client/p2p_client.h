@@ -46,7 +46,7 @@ public:
     void upload_file(char *tracker_port, string filename);
 
     // These functions are involved p2p_client and TURN and Signaller communication
-    bool setupSocketForSignallerServer(SOCKET* sock);
+    bool linkSignalPublicIpPort(string* signal_public_ip);
     string get_signaller_public_ip_port(); //"192.168.1.1:5000"
     // send data to signaller to relay to dest, returns 1 if success
     int send_to_signal_public_ip(string public_signaller_ip_of_dest, char* data, int num_bytes_of_data_to_send);

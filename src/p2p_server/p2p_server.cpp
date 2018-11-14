@@ -52,7 +52,7 @@ bool P2P_Server::start(const char *port) {
     return true;
 }
 
-bool P2P_Server::listen() {
+bool P2P_Server::listen(string& signal_public_ip) {
 
     // variables to store client's ip address
     // struct sockaddr_in client_addr{};
@@ -65,14 +65,19 @@ bool P2P_Server::listen() {
     //     WSACleanup();
     //     return false;
     // }
+    //cout<<"hi"<<endl;
+    //cout<< "**THIS IS THE PUBLIC SIGNAL PORT:" << get_signaller_public_ip_port() << endl << endl;
 
-    cout<< "THIS IS THE PUBLIC SIGNAL PORT:" << get_signaller_public_ip_port() << endl;
+    thread keep_alive_thread(&P2P_Server::keep_alive_udp, this);
+    keep_alive_thread.detach();
+
+    cout << "P2P server listening..." << "\n";
+    cout.flush();
 
     while (true) {
         //sin_size = sizeof(client_addr);
 
-        cout << "P2P server listening..." << "\n";
-        cout.flush();
+
         // client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &sin_size);
         // // Don't exit, continue to listen
         // if(client_sock == INVALID_SOCKET) {
@@ -86,20 +91,48 @@ bool P2P_Server::listen() {
 
         int bytes_recieved = read_from_signal_public_ip(recv_buffer,MAX_BUFFER_LEN);
 
-        string request = string(recv_buffer);
+        string isGetIpStr = "yourIP";
+        string recvStrToCheck = string(recv_buffer,32);
+
+        if(recvStrToCheck.substr(0,6) == isGetIpStr) {
+            // is get public ip request
+            recv_buffer[bytes_recieved] = '\0';
+            string ipPort = string(recv_buffer+6);
+            //cout<<"myipis " << ipPort <<endl;
+            signal_public_ip = ipPort;
+        } else {
+            cout << "P2P server received request..." << "\n";
+            cout.flush();
+
+            string request = string(recv_buffer);
+
+            thread client_thread(&P2P_Server::process_request, this, request);
+
+            client_thread.detach();
+        }
+
 
         // cout << "Received a connection from:" << inet_ntoa(client_addr.sin_addr) << "\tport no: "
         //      << ntohs(client_addr.sin_port) << "\n";
 
 
-        thread client_thread(&P2P_Server::process_request, this, request);
 
-        //client_thread.detach();
     }
+
+    //while(true);
 
     WSACleanup();
     closesocket(listen_sock);
 }
+
+bool P2P_Server::keep_alive_udp(){
+    while(true){
+        send_signaller_public_ip_port();
+        Sleep(5000);
+    }
+    return false;
+}
+
 
 bool P2P_Server::process_request(string request) {
 
@@ -175,7 +208,7 @@ tuple<string, string, string> P2P_Server::parse_packet(char *recv_buffer) {
     return {str_token[1], str_token[2], str_token[3]};
 };
 
-bool P2P_Server::setupSocketForSignallerServer(SOCKET* serv_sock){
+bool P2P_Server::setupSocketForSignallerServer(){
     string private_ip = inet_ntoa(p2p_server_private_ip);
     struct addrinfo *result = nullptr, hints{};
     int status;
@@ -193,33 +226,32 @@ bool P2P_Server::setupSocketForSignallerServer(SOCKET* serv_sock){
         return false;
     }
 
-    *serv_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (*serv_sock == INVALID_SOCKET) {
+    signal_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (signal_sock == INVALID_SOCKET) {
         cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket.\n";
         freeaddrinfo(result);
         return false;
     }
 
-    if (::bind(*serv_sock, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
+    if (::bind(signal_sock, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
         cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
         freeaddrinfo(result);
-        closesocket(*serv_sock);
+        closesocket(signal_sock);
         return false;
     }
 
     freeaddrinfo(result);
-    signaller_sock = *serv_sock;
 
     return true;
 }
 
 
-string P2P_Server::get_signaller_public_ip_port() {
+void P2P_Server::send_signaller_public_ip_port() {
     std::string signal_server_ip = "18.136.118.72";
     int signal_server_port = 6883;
     struct sockaddr_in servaddr;
     const int MAXLINE = 32;
-    char buf[MAXLINE];
+    //char buf[MAXLINE];
     char bindingReq[20];
     strcpy(bindingReq, "getPublic");
 
@@ -229,17 +261,18 @@ string P2P_Server::get_signaller_public_ip_port() {
     inet_pton(AF_INET, signal_server_ip.c_str(), &servaddr.sin_addr);
     servaddr.sin_port = htons(signal_server_port);
 
-    sendto(signaller_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+    sendto(signal_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
-    Sleep(1000);
-    // TODO timeout
-    int recv = recvfrom(signaller_sock,(char *)buf,MAXLINE, 0, nullptr, nullptr);
-    buf[recv] = '\0';
-    return string(buf);
+//    int recv = recvfrom(signal_sock,(char *)buf,MAXLINE, 0, nullptr, nullptr);
+//    buf[recv] = '\0';
+//    return string(buf);
 }
 
+
+
 int P2P_Server::read_from_signal_public_ip(char* data, int max_bytes_of_data_buffer_allocated){
-    int bytes_recieved = recv(signaller_sock,data,max_bytes_of_data_buffer_allocated,0);
+    int bytes_recieved = recvfrom(signal_sock,data,max_bytes_of_data_buffer_allocated,0, nullptr, nullptr);
+    //cout << "help" <<data<< endl;
     return bytes_recieved;
 }
 
@@ -259,7 +292,6 @@ int P2P_Server::send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data
             WSACleanup();
             exit(EXIT_FAILURE);
         }
-
 
 
     memset(&server_addr, 0, sizeof(server_addr)); //sets all bytes of servaddr to 0

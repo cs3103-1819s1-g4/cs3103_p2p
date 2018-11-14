@@ -19,18 +19,18 @@
 
 using namespace std;
 
-void start_p2p_server_thread(Storage& storage);
-void start_p2p_client_thread(Storage& storage);
-SOCKET signalSock;
+void start_p2p_server_thread(Storage& storage, string& signalSock);
+void start_p2p_client_thread(Storage& storage, string& signalSock);
 
 int main() {
 
     Storage storage(PATH_TO_STORAGE_DIRECTORY);
+    string signal_public_ip;
 
-    thread p2p_server_thread(start_p2p_server_thread, std::ref(storage));
+    thread p2p_server_thread(start_p2p_server_thread, std::ref(storage), std::ref(signal_public_ip));
     Sleep(1000);
 
-    thread p2p_client_thread(start_p2p_client_thread, std::ref(storage));
+    thread p2p_client_thread(start_p2p_client_thread, std::ref(storage), std::ref(signal_public_ip));
 
     p2p_server_thread.join();
     p2p_client_thread.join();
@@ -38,7 +38,7 @@ int main() {
     return 0;
 }
 
-void start_p2p_client_thread(Storage& storage) {
+void start_p2p_client_thread(Storage& storage, string& signal_public_ip) {
 
     string tracker_ip_string;
     int user_option;
@@ -49,7 +49,7 @@ void start_p2p_client_thread(Storage& storage) {
 
     const char *tracker_ip = tracker_ip_string.c_str();
     p2p_client client(tracker_ip, &storage);
-    client.setupSocketForSignallerServer(&signalSock);
+    client.linkSignalPublicIpPort(&signal_public_ip);
 
     do {
         client.display_menu();
@@ -57,14 +57,14 @@ void start_p2p_client_thread(Storage& storage) {
     } while (user_option != 5);
 }
 
-void start_p2p_server_thread(Storage& storage) {
+void start_p2p_server_thread(Storage& storage,string& signal_public_ip) {
 
     P2P_Server p2p_server(&storage);
-    p2p_server.setupSocketForSignallerServer(&signalSock);
+    p2p_server.setupSocketForSignallerServer();
 
     if (!p2p_server.start(DEFAULT_P2P_SERVER_PORT)) {
         cout << "Failed to start server";
     } else {
-        p2p_server.listen();
+        p2p_server.listen(signal_public_ip);
     }
 }
