@@ -65,9 +65,15 @@ int choose_random_server(map<int, tracker_peer_list_entry>& peer_list,
 
     int min = 0;
     int max = peer_list.size() - 1;
-
+    map<int, tracker_peer_list_entry>::iterator it;
     int rand_num = rand()%(max-min + 1) + min; // TODO: As for now, use rand()
-    tracker_peer_list_entry entry_obj = peer_list[rand_num];
+
+    it = peer_list.begin();
+    while(rand_num > 0) {
+        it++;
+        rand_num--;
+    }
+    tracker_peer_list_entry entry_obj = it->second;
 
 //    while (entry_obj.get_chunk_no() != missing_chunk_num) {
 //        rand_num = rand()%(max-min + 1) + min;
@@ -77,6 +83,9 @@ int choose_random_server(map<int, tracker_peer_list_entry>& peer_list,
     p2p_server_ip = entry_obj.get_public_IP();
     p2p_server_chunk_num = to_string(entry_obj.get_chunk_no());
     p2p_server_port_num = to_string(entry_obj.get_port_no());
+
+    peer_list.erase(it);
+
 
     return 0;
 }
