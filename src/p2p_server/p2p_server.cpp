@@ -55,106 +55,103 @@ bool P2P_Server::start(const char *port) {
 bool P2P_Server::listen() {
 
     // variables to store client's ip address
-    struct sockaddr_in client_addr{};
-    int sin_size;
-    SOCKET client_sock;
+    // struct sockaddr_in client_addr{};
+    // int sin_size;
+    // SOCKET client_sock;
 
-    if (::listen(listen_sock, MAX_CONNECTIONS) == SOCKET_ERROR) {
-        cout << "[ERROR]: " << WSAGetLastError() << " Listen sock failed\n";
-        closesocket(listen_sock);
-        WSACleanup();
-        return false;
-    }
+    // if (::listen(listen_sock, MAX_CONNECTIONS) == SOCKET_ERROR) {
+    //     cout << "[ERROR]: " << WSAGetLastError() << " Listen sock failed\n";
+    //     closesocket(listen_sock);
+    //     WSACleanup();
+    //     return false;
+    // }
 
 
     while (true) {
-        sin_size = sizeof(client_addr);
+        //sin_size = sizeof(client_addr);
 
         cout << "P2P server listening..." << "\n";
         cout.flush();
-        client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &sin_size);
-        // Don't exit, continue to listen
-        if(client_sock == INVALID_SOCKET) {
-            cout << "[ERROR]: " << WSAGetLastError() << " Accept client failed\n"
-                 << "Might have exceeded max connections allowed\n";
-        }
-        cout << "Received a connection from:" << inet_ntoa(client_addr.sin_addr) << "\tport no: "
-             << ntohs(client_addr.sin_port) << "\n";
+        // client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &sin_size);
+        // // Don't exit, continue to listen
+        // if(client_sock == INVALID_SOCKET) {
+        //     cout << "[ERROR]: " << WSAGetLastError() << " Accept client failed\n"
+        //          << "Might have exceeded max connections allowed\n";
+        // }
 
-        thread client_thread(&P2P_Server::process_request, this, ref(client_sock));
 
-        client_thread.detach();
+        char *recv_buffer;
+        recv_buffer = (char *)malloc(MAX_BUFFER_LEN);
+
+        int bytes_recieved = read_from_signal_public_ip(recv_buffer,MAX_BUFFER_LEN);
+
+        string request = string(recv_buffer);
+
+        // cout << "Received a connection from:" << inet_ntoa(client_addr.sin_addr) << "\tport no: "
+        //      << ntohs(client_addr.sin_port) << "\n";
+
+
+        thread client_thread(&P2P_Server::process_request, this, ref(client_sock), request);
+
+        //client_thread.detach();
     }
 
     WSACleanup();
     closesocket(listen_sock);
 }
 
-bool P2P_Server::process_request(SOCKET& client_sock) {
+bool P2P_Server::process_request(SOCKET& client_sock, string request) {
 
     // Each TCP connection has an individual send and receive buffer
     size_t chunk_size;
-    char *send_buffer, *recv_buffer;
+    char *send_buffer; //, *recv_buffer;
     int iresult, chunk_no;
 
-    recv_buffer = (char *)malloc(MAX_BUFFER_LEN);
+    //recv_buffer = (char *)malloc(MAX_BUFFER_LEN);
     send_buffer = (char *)malloc(MAX_BUFFER_LEN);
 
-    if(recv_buffer == nullptr || send_buffer == nullptr) {
-        cout << "[ERROR]: " << GetLastError() << " Not enough memory to allocate to send/recv buffer\n";
-        closesocket(client_sock);
-        return false;
-    }
+    // if(recv_buffer == nullptr || send_buffer == nullptr) {
+    //     cout << "[ERROR]: " << GetLastError() << " Not enough memory to allocate to send/recv buffer\n";
+    //     closesocket(client_sock);
+    //     return false;
+    // }
 
-    // Keep receving data from client until an error has occurred or no data is found
-    do {
-        iresult = recv(client_sock, recv_buffer, MAX_BUFFER_LEN, 0);
-        if (iresult == 0) {
-            cout << "Connection from client closing..." << "\n";
-        } else if (iresult < 0) {
-            cout << "[ERROR]: " << WSAGetLastError() << " Error receiving data from client\n";
-            closesocket(client_sock);
+    // Parse packet to get filename and chunk_no requested
+    pair<string, string, string> filename_chunk_no_pair = parse_packet(request.c_str());
+    string filename = filename_chunk_no_pair.first;
+    chunk_no = strtol(filename_chunk_no_pair.second.c_str(), nullptr, 10);
+    string client_public_ip_port = filename_chunk_no_pair.third;
+
+    if (storage->getChunk(send_buffer, filename, chunk_no, &chunk_size) != -1) {
+        cout << "Obtained filename and chunk no from storage: " << filename << "\t" << chunk_no << "\n";
+
+        // If get chunk from storage is successful, send data
+        iresult = send_to_TURN_public_ip(client_public_ip_port, send_buffer, chunk_size);
+        if (iresult == -1) {
+            cout << "[ERROR]: " << WSAGetLastError() << "\tSend to TURN client socket failed\n";
             return false;
-        } else {
-
-            // Parse packet to get filename and chunk_no requested
-            pair<string, string> filename_chunk_no_pair = parse_packet(recv_buffer);
-            string filename = filename_chunk_no_pair.first;
-            chunk_no = strtol(filename_chunk_no_pair.second.c_str(), nullptr, 10);
-
-            if (storage->getChunk(send_buffer, filename, chunk_no, &chunk_size) != -1) {
-                cout << "Obtained filename and chunk no from storage: " << filename << "\t" << chunk_no << "\n";
-
-                // If get chunk from storage is successful, send data
-                iresult = send(client_sock, send_buffer, chunk_size, 0);
-                if (iresult == SOCKET_ERROR) {
-                    cout << "[ERROR]: " << WSAGetLastError() << "\tSend to client socket failed\n";
-                    closesocket(client_sock);
-                    return false;
-                }
-                cout << "Bytes sent: " << iresult << "\n";
-            } else {
-                // If chunk cannot be found, send CHUNK_NOT_FOUND_ERROR to client
-                strcpy_s(send_buffer, sizeof(CHUNK_NOT_FOUND_ERROR), CHUNK_NOT_FOUND_ERROR);
-
-                if (send(listen_sock, send_buffer, sizeof(CHUNK_NOT_FOUND_ERROR), 0) == SOCKET_ERROR) {
-                    cout << "[ERROR]: " << WSAGetLastError() << "\tSend to socket failed\n";
-                    closesocket(client_sock);
-                    return false;
-                }
-            }
         }
-    } while(iresult > 0);
+        cout << "Bytes sent: " << iresult << "\n";
+    } else {
+        // If chunk cannot be found, send CHUNK_NOT_FOUND_ERROR to client
+        strcpy_s(send_buffer, sizeof(CHUNK_NOT_FOUND_ERROR), CHUNK_NOT_FOUND_ERROR);
 
-    iresult = shutdown(client_sock, SD_SEND);
-    if(iresult == SOCKET_ERROR) {
-        cout << "[ERROR]: " << WSAGetLastError() << "\tShutdown with client failed\n";
-        closesocket(client_sock);
-        return false;
+        if (send_to_TURN_public_ip(client_public_ip_port, send_buffer, sizeof(CHUNK_NOT_FOUND_ERROR)) == -1) {
+            cout << "[ERROR]: " << WSAGetLastError() << "\tSend to socket failed\n";
+            return false;
+        }
     }
+
+
+    // iresult = shutdown(client_sock, SD_SEND);
+    // if(iresult == SOCKET_ERROR) {
+    //     cout << "[ERROR]: " << WSAGetLastError() << "\tShutdown with client failed\n";
+    //     closesocket(client_sock);
+    //     return false;
+    // }
 
     cout << "Connection with client has finished successfully" << "\n";
-    closesocket(client_sock);
+    //closesocket(client_sock);
     return true;
 }
 
@@ -172,7 +169,7 @@ pair<string, string> P2P_Server::parse_packet(char *recv_buffer) {
 
     //assert((str_token[0] == "DOWNLOAD") == 0);
 
-    return {str_token[1], str_token[2]};
+    return {str_token[1], str_token[2], str_token[3]};
 };
 
 bool P2P_Server::setupSocketForSignallerServer(){
