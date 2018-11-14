@@ -186,37 +186,26 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             cout << "Connecting to: " + p2p_server_ip + ", " + p2p_server_port_num << endl;
 
             // If the connection fails, try again...
-            // if (this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(),
-            //         false) == -1) {
-            //     this->ask_updated_peer_list(DEFAULT_TRACKER_PORT, filename);
-            //     continue;
-            // }
-            SOCKET recv_sock;
-            string TURN_public_ip = connect_to_TURN_get_public_ip(&recv_sock);
-            if(TURN_public_ip == ""){
-                cout << "Error connecting to TURN sever, please try again" << endl;
-                break;
+            if (this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(),
+                    false) == -1) {
+                this->ask_updated_peer_list(DEFAULT_TRACKER_PORT, filename);
+                continue;
             }
 
-            str = "DOWNLOAD " + filename + " " + p2p_server_chunk_num + " " + TURN_public_ip;
+            str = "DOWNLOAD " + filename + " " + p2p_server_chunk_num;
             const char *buf_tcp = str.c_str();
 
             // Connect to server.
-            // iresult = connect( connect_socket, ptr->ai_addr, (int)ptr->ai_addrlen);
-            // if (iresult == SOCKET_ERROR) {
-            //     closesocket(connect_socket);
-            //     connect_socket = INVALID_SOCKET;
-            //     continue;
-            // }
-            // iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
-
-            send_to_signal_public_ip(p2p_server_ip, buf_tcp, strlen(buf_tcp));
+            iresult = connect( connect_socket, ptr->ai_addr, (int)ptr->ai_addrlen);
+            if (iresult == SOCKET_ERROR) {
+                closesocket(connect_socket);
+                connect_socket = INVALID_SOCKET;
+                continue;
+            }
+            iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
 
             int recvSize;
-            // recvSize = recv(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0);
-
-            // TODO timeout this function
-            recSize = read_from_TURN_public_ip(recv_sock,recv_buffer, MAX_BUFFER_SIZE);
+            recvSize = recv(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0);
 
             cout << "Received the chunk!" << endl;
             string temp(recvbuf);
@@ -314,9 +303,8 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
         exit(EXIT_FAILURE);
     }
 
-    //string private_ip = inet_ntoa(p2p_client_private_ip);
-    string public_signal_ip_port =  get_signaller_public_ip_port();
-    string str = "REQUEST 4 " + public_signal_ip_port + " " + DEFAULT_P2P_SERVER_PORT + " ";
+    string private_ip = inet_ntoa(p2p_client_private_ip);
+    string str = "REQUEST 4 " + private_ip + " " + DEFAULT_P2P_SERVER_PORT + " ";
 
     // TODO: Modify to include public IP
     for (auto chunk_no = 1; chunk_no <= num_of_chunks; chunk_no++) {
@@ -447,12 +435,6 @@ bool p2p_client::setupSocketForSignallerServer(){
     if (serv_sock == INVALID_SOCKET) {
         cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket.\n";
         freeaddrinfo(result);
-        return false;
-    }
-
-    if (setsockopt(serv_sock,SOL_SOCKET,SO_REUSEADDR,&true,sizeof(int)) == SOCKET_ERROR) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to set Socket options.\n";
-        closesocket(serv_sock);
         return false;
     }
 
