@@ -169,9 +169,9 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 //        check_downloaded_chunks[i] = false;
 //    }
     check_downloaded_chunks[0] = NULL; // since chunk starts from #1; we will not use index 0.
-    int downloaded_chunks = 0;
-
-    while (downloaded_chunks != peer_list_size) {
+    //int retry_count = 15;
+    bool complete = false;
+    while (!peer_list.empty()) {
 
         choose_random_server(peer_list, p2p_server_ip,
                 p2p_server_chunk_num, p2p_server_port_num);
@@ -221,16 +221,22 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             WSACleanup();
 
             check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
-            downloaded_chunks++;
 
             // Once the chunk is downloaded, inform the tracker
+            this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
         }
-        this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
+
         if((this->p2p_client_storage)->getFinalChunkNumber(filename) != -1)
         {
-            printf("File Complete\n");
+            complete = true;
             break;
         }
+    }
+    if(complete){
+        printf("File Complete\n");
+    } else
+    {
+        printf("File Incomplete\n");
     }
 
 }
