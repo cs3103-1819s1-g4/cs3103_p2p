@@ -21,6 +21,7 @@ using namespace std;
 
 void start_p2p_server_thread(Storage& storage);
 void start_p2p_client_thread(Storage& storage);
+SOCKET signalSock;
 
 int main() {
 
@@ -48,7 +49,7 @@ void start_p2p_client_thread(Storage& storage) {
 
     const char *tracker_ip = tracker_ip_string.c_str();
     p2p_client client(tracker_ip, &storage);
-    client.setupSocketForSignallerServer();
+    client.setupSocketForSignallerServer(&signalSock);
 
     do {
         client.display_menu();
@@ -59,7 +60,7 @@ void start_p2p_client_thread(Storage& storage) {
 void start_p2p_server_thread(Storage& storage) {
 
     P2P_Server p2p_server(&storage);
-    p2p_server.setupSocketForSignallerServer();
+    p2p_server.setupSocketForSignallerServer(&signalSock);
 
     if (!p2p_server.start(DEFAULT_P2P_SERVER_PORT)) {
         cout << "Failed to start server";

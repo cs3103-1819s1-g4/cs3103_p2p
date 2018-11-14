@@ -46,7 +46,7 @@ public:
     void upload_file(char *tracker_port, string filename);
 
     // These functions are involved p2p_client and TURN and Signaller communication
-    bool setupSocketForSignallerServer();
+    bool setupSocketForSignallerServer(SOCKET* sock);
     string get_signaller_public_ip_port(); //"192.168.1.1:5000"
     // send data to signaller to relay to dest, returns 1 if success
     int send_to_signal_public_ip(string public_signaller_ip_of_dest, char* data, int num_bytes_of_data_to_send);
@@ -56,7 +56,6 @@ public:
     int read_from_TURN_public_ip(SOCKET sock,char* data, int max_bytes_of_data_buffer_allocated);
     //an example of how to use the functions
     //void testTURN();
-    void keep_UDP_alive_thread();
 
     void quit(char *tracker_port);
 

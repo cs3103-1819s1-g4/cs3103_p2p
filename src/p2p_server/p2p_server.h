@@ -52,11 +52,11 @@ public:
     void stop();
     bool listen();
 
-    bool process_request(SOCKET& client_sock);
-    pair<string, string> parse_packet(char *recv_buffer);
+    bool process_request(string request);
+    tuple<string, string, string> parse_packet(char *recv_buffer);
 
     // These functions are involved p2p_server and TURN and Signaller communication
-    bool setupSocketForSignallerServer();
+    bool setupSocketForSignallerServer(SOCKET * signalsock);
     string get_signaller_public_ip_port(); //"192.168.1.1:5000"
     // returns number of bytes read from signaller
     int read_from_signal_public_ip(char* data, int max_bytes_of_data_buffer_allocated);
@@ -64,6 +64,8 @@ public:
     int send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data, int num_bytes_of_data_to_send);
     // an example on how to use the functions
     //void testTURN();
+    bool keep_alive_udp();
+
 };
 
 #endif //CS3103_P2P_P2P_SERVER_H

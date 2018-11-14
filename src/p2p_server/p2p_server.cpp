@@ -66,6 +66,7 @@ bool P2P_Server::listen() {
     //     return false;
     // }
 
+    cout<< "THIS IS THE PUBLIC SIGNAL PORT:" << get_signaller_public_ip_port() << endl;
 
     while (true) {
         //sin_size = sizeof(client_addr);
@@ -91,7 +92,7 @@ bool P2P_Server::listen() {
         //      << ntohs(client_addr.sin_port) << "\n";
 
 
-        thread client_thread(&P2P_Server::process_request, this, ref(client_sock), request);
+        thread client_thread(&P2P_Server::process_request, this, request);
 
         //client_thread.detach();
     }
@@ -100,7 +101,7 @@ bool P2P_Server::listen() {
     closesocket(listen_sock);
 }
 
-bool P2P_Server::process_request(SOCKET& client_sock, string request) {
+bool P2P_Server::process_request(string request) {
 
     // Each TCP connection has an individual send and receive buffer
     size_t chunk_size;
@@ -116,11 +117,13 @@ bool P2P_Server::process_request(SOCKET& client_sock, string request) {
     //     return false;
     // }
 
+    char req[128];
+    strcpy(req,request.c_str());
     // Parse packet to get filename and chunk_no requested
-    pair<string, string, string> filename_chunk_no_pair = parse_packet(request.c_str());
-    string filename = filename_chunk_no_pair.first;
-    chunk_no = strtol(filename_chunk_no_pair.second.c_str(), nullptr, 10);
-    string client_public_ip_port = filename_chunk_no_pair.third;
+    tuple<string, string, string> filename_chunk_no_pair = parse_packet(req);
+    string filename = get<0>(filename_chunk_no_pair);
+    chunk_no = strtol(get<1>(filename_chunk_no_pair).c_str(), nullptr, 10);
+    string client_public_ip_port = get<2>(filename_chunk_no_pair);
 
     if (storage->getChunk(send_buffer, filename, chunk_no, &chunk_size) != -1) {
         cout << "Obtained filename and chunk no from storage: " << filename << "\t" << chunk_no << "\n";
@@ -155,7 +158,7 @@ bool P2P_Server::process_request(SOCKET& client_sock, string request) {
     return true;
 }
 
-pair<string, string> P2P_Server::parse_packet(char *recv_buffer) {
+tuple<string, string, string> P2P_Server::parse_packet(char *recv_buffer) {
 
     /* Variables to tokenise string*/
     string recv_buffer_str(recv_buffer);
@@ -172,8 +175,8 @@ pair<string, string> P2P_Server::parse_packet(char *recv_buffer) {
     return {str_token[1], str_token[2], str_token[3]};
 };
 
-bool P2P_Server::setupSocketForSignallerServer(){
-    std::string private_ip = inet_ntoa(p2p_server_private_ip);
+bool P2P_Server::setupSocketForSignallerServer(SOCKET* serv_sock){
+    string private_ip = inet_ntoa(p2p_server_private_ip);
     struct addrinfo *result = nullptr, hints{};
     int status;
 
@@ -183,37 +186,33 @@ bool P2P_Server::setupSocketForSignallerServer(){
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
-    string port = "6883";
+    string port = "6889";
     status = getaddrinfo(private_ip.c_str(), port.c_str(), &hints, &result);
     if (status != 0) {
-        std::cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
+        cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
         return false;
     }
 
-    SOCKET serv_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (serv_sock == INVALID_SOCKET) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket.\n";
+    *serv_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (*serv_sock == INVALID_SOCKET) {
+        cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket.\n";
         freeaddrinfo(result);
-        return false;
-    }
-    
-    if (setsockopt(serv_sock,SOL_SOCKET,SO_REUSEADDR,&true,sizeof(int)) == SOCKET_ERROR) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to set Socket options.\n";
-        closesocket(serv_sock);
         return false;
     }
 
-    if (::bind(serv_sock, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
+    if (::bind(*serv_sock, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
+        cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
         freeaddrinfo(result);
-        closesocket(serv_sock);
+        closesocket(*serv_sock);
         return false;
     }
 
     freeaddrinfo(result);
-    signaller_sock = serv_sock;
+    signaller_sock = *serv_sock;
+
     return true;
 }
+
 
 string P2P_Server::get_signaller_public_ip_port() {
     std::string signal_server_ip = "18.136.118.72";
@@ -232,7 +231,7 @@ string P2P_Server::get_signaller_public_ip_port() {
 
     sendto(signaller_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
-    Sleep(1);
+    Sleep(1000);
     // TODO timeout
     int recv = recvfrom(signaller_sock,(char *)buf,MAXLINE, 0, nullptr, nullptr);
     buf[recv] = '\0';

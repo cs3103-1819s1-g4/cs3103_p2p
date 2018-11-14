@@ -210,13 +210,16 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             // }
             // iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
 
-            send_to_signal_public_ip(p2p_server_ip, buf_tcp, strlen(buf_tcp));
+            char tosend[128];
+            strcpy(tosend, str.c_str());
+
+            send_to_signal_public_ip(p2p_server_ip, tosend, strlen(buf_tcp));
 
             int recvSize;
             // recvSize = recv(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0);
 
             // TODO timeout this function
-            recSize = read_from_TURN_public_ip(recv_sock,recv_buffer, MAX_BUFFER_SIZE);
+            recvSize = read_from_TURN_public_ip(recv_sock,recvbuf, MAX_BUFFER_SIZE);
 
             cout << "Received the chunk!" << endl;
             string temp(recvbuf);
@@ -334,9 +337,9 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
 void p2p_client::quit(char *tracker_port) {
 
     this->connection(this->tracker_ip, tracker_port, true);
-    string TURN_public_ip_port = connect_to_TURN_get_public_ip(&recv_sock);
+    string SIGNAL_public_ip_port = get_signaller_public_ip_port();
 
-    string str = "REQUEST 5 " + TURN_public_ip_port + " " + DEFAULT_P2P_SERVER_PORT;
+    string str = "REQUEST 5 " + SIGNAL_public_ip_port + " " + DEFAULT_P2P_SERVER_PORT;
     const char *buf = str.c_str();
     sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
@@ -352,8 +355,8 @@ void p2p_client::inform_tracker_downloaded_chunk(char *tracker_port, string file
     this->connection(this->tracker_ip, tracker_port, true);
 
     //string private_ip = inet_ntoa(p2p_client_private_ip);
-    string TURN_public_ip_port = connect_to_TURN_get_public_ip(&recv_sock);
-    string str = "REQUEST 3 " + filename + " " + chunk_num + " " + TURN_public_ip_port + " " +
+    string SIGNAL_public_ip_port = get_signaller_public_ip_port();
+    string str = "REQUEST 3 " + filename + " " + chunk_num + " " + SIGNAL_public_ip_port + " " +
             DEFAULT_P2P_SERVER_PORT;
 
     const char *buf = str.c_str();
@@ -426,57 +429,9 @@ int execute_user_option(p2p_client client) {
 
 }
 
-bool p2p_client::setupSocketForSignallerServer(){
-    string private_ip = inet_ntoa(p2p_client_private_ip);
-    struct addrinfo *result = nullptr, hints{};
-    int status;
-
-    ZeroMemory(&result, sizeof(result));
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_flags = AI_PASSIVE; // to allow binding
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_protocol = IPPROTO_UDP;
-    string port = "6883";
-    status = getaddrinfo(private_ip.c_str(), port.c_str(), &hints, &result);
-    if (status != 0) {
-        cout << "[ERROR]: " << status << " Unable to get address info for Port " << port << ".\n";
-        return false;
-    }
-
-    SOCKET serv_sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (serv_sock == INVALID_SOCKET) {
-        cout << "[ERROR]: " << WSAGetLastError() << " Unable to create Socket.\n";
-        freeaddrinfo(result);
-        return false;
-    }
-
-    if (setsockopt(serv_sock,SOL_SOCKET,SO_REUSEADDR,&true,sizeof(int)) == SOCKET_ERROR) {
-        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to set Socket options.\n";
-        closesocket(serv_sock);
-        return false;
-    }
-
-    if (::bind(serv_sock, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
-        cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
-        freeaddrinfo(result);
-        closesocket(serv_sock);
-        return false;
-    }
-
-    freeaddrinfo(result);
-    signaller_sock = serv_sock;
-
-    thread keep_UDP_alive_thread(&p2p_client::keep_UDP_alive_thread);
-
+bool p2p_client::setupSocketForSignallerServer(SOCKET* serv_sock){
+    signaller_sock = *serv_sock;
     return true;
-}
-
-void p2p_client::keep_UDP_alive_thread(){
-    while(1){
-        get_signaller_public_ip_port();
-        sleep(5);
-    }
 }
 
 
@@ -497,7 +452,7 @@ string p2p_client::get_signaller_public_ip_port() {
 
     sendto(signaller_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
-    Sleep(1);
+    Sleep(1000);
     // TODO timeout
     int recv = recvfrom(signaller_sock,(char *)buf,MAXLINE, 0, nullptr, nullptr);
     buf[recv] = '\0';
