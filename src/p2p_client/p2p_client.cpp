@@ -219,7 +219,7 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             // recvSize = recv(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0);
 
             // TODO timeout this function
-            recvSize = read_from_TURN_public_ip(recv_sock,recvbuf, MAX_BUFFER_SIZE);
+            recvSize = read_from_TURN_public_ip(&recv_sock,recvbuf, MAX_BUFFER_SIZE);
 
             cout << "Received the chunk!" << endl;
             string temp(recvbuf);
@@ -227,15 +227,15 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
             // p2p_server will send me just the chunk data...
 //            Storage storage("..\\download");
+
             (this->p2p_client_storage)->saveChunk(recvbuf, sizeof(char), recvSize, filename);
 
-            closesocket(connect_socket);
+            closesocket(recv_sock);
             memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
 //            peer_list.clear(); // clears peer_list
-            WSACleanup();
+            //WSACleanup();
 
             check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
-
             // Once the chunk is downloaded, inform the tracker
             this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
         }
@@ -499,9 +499,33 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
     return string(recv_data);
 }
 
-int p2p_client::read_from_TURN_public_ip(SOCKET sock, char* data, int max_bytes_of_data_buffer_allocated){
-    int bytes_received=recv(sock,data,max_bytes_of_data_buffer_allocated,0);
-    return bytes_received;
+int p2p_client::read_from_TURN_public_ip(SOCKET* sock, char* data, int max_bytes_of_data_buffer_allocated){
+    int x = max_bytes_of_data_buffer_allocated;
+    int bytesRead = 0;
+    int result;
+    int totalBytes = 10000;
+    while (bytesRead < totalBytes)
+    {
+        //cout<<"readbtyes:" << bytesRead<< endl;
+        result = recv(*sock, data + bytesRead, x - bytesRead,0);
+        if (result < 1 )
+        {
+            // Throw your error.
+            break;
+        }
+        totalBytes = parseInt32(data+4) + 10;
+        //cout << "total:" << totalBytes << endl;
+        bytesRead += result;
+    }
+
+    // int bytes_received=recv(*sock,data,max_bytes_of_data_buffer_allocated,0);
+    return bytesRead;
+}
+
+int32_t p2p_client::parseInt32(char *buf) {
+    uint32_t u0 = (unsigned char) buf[0], u1 = (unsigned char) buf[1], u2 = (unsigned char) buf[2], u3 = (unsigned char) buf[3];
+    uint32_t uval = u0 | (u1 << 8) | (u2 << 16) | (u3 << 24);
+    return uval;
 }
 
 

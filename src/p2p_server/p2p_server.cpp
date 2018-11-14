@@ -100,8 +100,8 @@ bool P2P_Server::listen(string& signal_public_ip) {
             string ipPort = string(recv_buffer+6);
             //cout<<"myipis " << ipPort <<endl;
             signal_public_ip = ipPort;
-        } else {
-            cout << "P2P server received request..." << "\n";
+        } else if(bytes_recieved != -1) {
+            cout << "P2P server received request..." << "bytes recieved-"<< bytes_recieved << "\n";
             cout.flush();
 
             recv_buffer[bytes_recieved] = '\0';
@@ -110,6 +110,10 @@ bool P2P_Server::listen(string& signal_public_ip) {
             thread client_thread(&P2P_Server::process_request, this, request);
 
             client_thread.detach();
+        } else {
+            cout << "P2P server error UDP..." << endl << recv_buffer << "\n";
+            cout.flush();
+
         }
 
 

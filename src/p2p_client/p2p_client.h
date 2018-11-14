@@ -53,10 +53,10 @@ public:
     // connect to TURN with socket (pass in a blank socket socket)
     string connect_to_TURN_get_public_ip(SOCKET* sock);
     // returns number of bytes read from TURN socket and bytes stored in to buffer
-    int read_from_TURN_public_ip(SOCKET sock,char* data, int max_bytes_of_data_buffer_allocated);
+    int read_from_TURN_public_ip(SOCKET* sock,char* data, int max_bytes_of_data_buffer_allocated);
     //an example of how to use the functions
     //void testTURN();
-
+    int32_t parseInt32(char *buf);
     void quit(char *tracker_port);
 
     //Destructor
