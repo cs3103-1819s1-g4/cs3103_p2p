@@ -104,6 +104,7 @@ bool P2P_Server::listen(string& signal_public_ip) {
             cout << "P2P server received request..." << "\n";
             cout.flush();
 
+            recv_buffer[bytes_recieved] = '\0';
             string request = string(recv_buffer);
 
             thread client_thread(&P2P_Server::process_request, this, request);
@@ -136,6 +137,8 @@ bool P2P_Server::keep_alive_udp(){
 
 bool P2P_Server::process_request(string request) {
 
+    cout <<  "req-----"<< request << endl;
+
     // Each TCP connection has an individual send and receive buffer
     size_t chunk_size;
     char *send_buffer; //, *recv_buffer;
@@ -167,7 +170,7 @@ bool P2P_Server::process_request(string request) {
             cout << "[ERROR]: " << WSAGetLastError() << "\tSend to TURN client socket failed\n";
             return false;
         }
-        cout << "Bytes sent: " << iresult << "\n";
+        cout << "sent chunk" << "\n";
     } else {
         // If chunk cannot be found, send CHUNK_NOT_FOUND_ERROR to client
         strcpy_s(send_buffer, sizeof(CHUNK_NOT_FOUND_ERROR), CHUNK_NOT_FOUND_ERROR);
