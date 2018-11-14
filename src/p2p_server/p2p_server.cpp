@@ -199,6 +199,12 @@ bool P2P_Server::setupSocketForSignallerServer(){
         freeaddrinfo(result);
         return false;
     }
+    
+    if (setsockopt(serv_sock,SOL_SOCKET,SO_REUSEADDR,&true,sizeof(int)) == SOCKET_ERROR) {
+        std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to set Socket options.\n";
+        closesocket(serv_sock);
+        return false;
+    }
 
     if (::bind(serv_sock, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
         std::cout << "[ERROR]: " << WSAGetLastError() << " Unable to bind Socket.\n";
