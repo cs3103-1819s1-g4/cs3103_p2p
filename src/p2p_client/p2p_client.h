@@ -56,6 +56,7 @@ public:
     int read_from_TURN_public_ip(SOCKET sock,char* data, int max_bytes_of_data_buffer_allocated);
     //an example of how to use the functions
     //void testTURN();
+    void keep_UDP_alive_thread();
 
     void quit(char *tracker_port);
 

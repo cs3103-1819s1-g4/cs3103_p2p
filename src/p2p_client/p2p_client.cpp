@@ -334,9 +334,9 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
 void p2p_client::quit(char *tracker_port) {
 
     this->connection(this->tracker_ip, tracker_port, true);
-    string private_ip = inet_ntoa(p2p_client_private_ip);
+    string TURN_public_ip_port = connect_to_TURN_get_public_ip(&recv_sock);
 
-    string str = "REQUEST 5 " + private_ip + " " + DEFAULT_P2P_SERVER_PORT;
+    string str = "REQUEST 5 " + TURN_public_ip_port + " " + DEFAULT_P2P_SERVER_PORT;
     const char *buf = str.c_str();
     sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
@@ -351,8 +351,9 @@ void p2p_client::inform_tracker_downloaded_chunk(char *tracker_port, string file
 
     this->connection(this->tracker_ip, tracker_port, true);
 
-    string private_ip = inet_ntoa(p2p_client_private_ip);
-    string str = "REQUEST 3 " + filename + " " + chunk_num + " " + private_ip + " " +
+    //string private_ip = inet_ntoa(p2p_client_private_ip);
+    string TURN_public_ip_port = connect_to_TURN_get_public_ip(&recv_sock);
+    string str = "REQUEST 3 " + filename + " " + chunk_num + " " + TURN_public_ip_port + " " +
             DEFAULT_P2P_SERVER_PORT;
 
     const char *buf = str.c_str();
@@ -465,7 +466,17 @@ bool p2p_client::setupSocketForSignallerServer(){
 
     freeaddrinfo(result);
     signaller_sock = serv_sock;
+
+    thread keep_UDP_alive_thread(&p2p_client::keep_UDP_alive_thread);
+
     return true;
+}
+
+void p2p_client::keep_UDP_alive_thread(){
+    while(1){
+        get_signaller_public_ip_port();
+        sleep(5);
+    }
 }
 
 
@@ -554,6 +565,7 @@ int p2p_client::read_from_TURN_public_ip(SOCKET sock, char* data, int max_bytes_
     int bytes_received=recv(sock,data,max_bytes_of_data_buffer_allocated,0);
     return bytes_received;
 }
+
 
 //void p2p_client::testTURN(){
 ////    SOCKET temp;
