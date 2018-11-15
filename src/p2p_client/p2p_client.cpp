@@ -202,16 +202,16 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
             recvSize = read_from_TURN_public_ip(&recv_sock,recvbuf, MAX_BUFFER_SIZE);
 
-            cout << "Received the chunk!" << endl;
-
-            (this->p2p_client_storage)->saveChunk(recvbuf, sizeof(char), recvSize, filename);
+            if(recvSize != -1){
+                cout << "Received the chunk!" << endl;
+                (this->p2p_client_storage)->saveChunk(recvbuf, sizeof(char), recvSize, filename);
+                check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
+                // Once the chunk is downloaded, inform the tracker
+                this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
+            }
 
             closesocket(recv_sock);
             memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
-
-            check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
-            // Once the chunk is downloaded, inform the tracker
-            this->inform_tracker_downloaded_chunk(tracker_port, filename, p2p_server_chunk_num);
         }
 
         if((this->p2p_client_storage)->getFinalChunkNumber(filename) != -1)
@@ -468,23 +468,43 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
 }
 
 int p2p_client::read_from_TURN_public_ip(SOCKET* sock, char* data, int max_bytes_of_data_buffer_allocated){
-    int x = max_bytes_of_data_buffer_allocated;
-    int bytesRead = 0;
-    int result;
-    int totalBytes = 1000000;
-    while (bytesRead < totalBytes)
-    {
-        result = recv(*sock, data + bytesRead, x - bytesRead,0);
-        if (result < 1 )
+    struct timeval time_connect_socket{};
+    fd_set read_fd_connect_socket;
+    time_connect_socket.tv_sec = 2;
+    time_connect_socket.tv_usec = 0;
+    FD_ZERO(&read_fd_connect_socket);
+    FD_SET(*sock, &read_fd_connect_socket); // always look for connection attempts
+
+    if ((iresult = select(*sock + 1, &read_fd_connect_socket, nullptr, nullptr, &time_connect_socket))
+        == SOCKET_ERROR) {
+        cout << "[ERROR]: " << WSAGetLastError() << " Select with socket failed\n";
+        return -1;
+
+        // If no reply from tracker, resend packet
+    } else if (iresult == 0) {
+        // no reply
+        return -1;
+
+    } else {
+        int x = max_bytes_of_data_buffer_allocated;
+        int bytesRead = 0;
+        int result;
+        int totalBytes = 1000000;
+        while (bytesRead < totalBytes)
         {
-            // Throw your error.
-            break;
+            result = recv(*sock, data + bytesRead, x - bytesRead,0);
+            if (result < 1 )
+            {
+                // Throw your error.
+                break;
+            }
+            totalBytes = parseInt32(data+4) + 10;
+            bytesRead += result;
         }
-        totalBytes = parseInt32(data+4) + 10;
-        bytesRead += result;
+
+        return bytesRead;
     }
 
-    return bytesRead;
 }
 
 int32_t p2p_client::parseInt32(char *buf) {
