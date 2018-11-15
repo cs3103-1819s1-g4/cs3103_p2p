@@ -129,8 +129,9 @@ it is connected to the TURN server, to the signalling server which will relay th
 Once the P2P server receives the request, it will send the chunk to the TURN server specifying the public IP port address
 of the P2P client that the P2P server wants to send the chunk to. The chunk will then be relayed to the client via the TURN server.
 
-=== Example
+===== Example
 Suppose Alice wants to get ‘example.txt’ and Bob happens to have the file:
+
 . Alice requests list of peers from tracker who has the file 'example.txt' (The list should contain Bob UDP public IP:port)
 . Alice establish TCP connection with relay server with TURN server 18.136.118.72:6882 and receives her public TCP IP:port
 . Alice sends <Bob’s p2p_server UDP public IP:port> <Alice’s TCP public IP:port> <P2P protocol details> to the signal server
