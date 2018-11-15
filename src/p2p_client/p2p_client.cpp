@@ -446,6 +446,9 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
             exit(EXIT_FAILURE);
         }
 
+    DWORD timeout = 2 * 1000;
+    setsockopt(*sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+
     memset(&server_addr, 0, sizeof(server_addr)); //sets all bytes of servaddr to 0
     server_addr.sin_family = AF_INET;
     inet_pton(AF_INET, signal_server_ip.c_str(), &server_addr.sin_addr);
@@ -468,42 +471,31 @@ string p2p_client::connect_to_TURN_get_public_ip(SOCKET* sock){
 }
 
 int p2p_client::read_from_TURN_public_ip(SOCKET* sock, char* data, int max_bytes_of_data_buffer_allocated){
-    struct timeval time_connect_socket{};
-    fd_set read_fd_connect_socket;
-    time_connect_socket.tv_sec = 2;
-    time_connect_socket.tv_usec = 0;
-    FD_ZERO(&read_fd_connect_socket);
-    FD_SET(*sock, &read_fd_connect_socket); // always look for connection attempts
 
-    if ((iresult = select(*sock + 1, &read_fd_connect_socket, nullptr, nullptr, &time_connect_socket))
-        == SOCKET_ERROR) {
-        cout << "[ERROR]: " << WSAGetLastError() << " Select with socket failed\n";
-        return -1;
-
-        // If no reply from tracker, resend packet
-    } else if (iresult == 0) {
-        // no reply
-        return -1;
-
-    } else {
-        int x = max_bytes_of_data_buffer_allocated;
-        int bytesRead = 0;
-        int result;
-        int totalBytes = 1000000;
-        while (bytesRead < totalBytes)
-        {
-            result = recv(*sock, data + bytesRead, x - bytesRead,0);
-            if (result < 1 )
-            {
-                // Throw your error.
-                break;
-            }
-            totalBytes = parseInt32(data+4) + 10;
-            bytesRead += result;
+    int x = max_bytes_of_data_buffer_allocated;
+    int bytesRead = 0;
+    int result;
+    int totalBytes = 1000000;
+    while (bytesRead < totalBytes)
+    {
+        result = recv(*sock, data + bytesRead, x - bytesRead,0);
+        if(result == SOCKET_ERROR){
+            return -1;
         }
 
-        return bytesRead;
+        if (result < 1 )
+        {
+            // Throw your error.
+            return -1;
+        }
+        bytesRead += result;
+        if(bytesRead > 10) {
+            totalBytes = parseInt32(data + 4) + 10;
+        }
     }
+
+    return bytesRead;
+
 
 }
 
