@@ -5,7 +5,7 @@ string tracker_peer_list_entry::get_file_name() {
     return this->file_name;
 }
 
-uint8_t tracker_peer_list_entry::get_chunk_no() {
+uint16_t tracker_peer_list_entry::get_chunk_no() {
     return this->chunk_no;
 }
 
