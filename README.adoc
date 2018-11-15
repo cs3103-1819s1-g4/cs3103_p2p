@@ -32,7 +32,7 @@ Suppose Harry wants to exit from the swarm, he will inform the tracker and the t
 to Harry.
 
 Suppose Harry wants to upload a *new* file, Harry will divide the file
-into chunks of fixed size, say 2048 bytes, send it to tracker and tracker will update its list.
+into chunks of fixed size, say 60 kilobytes, send it to tracker and tracker will update its list.
 
 Any peer can query the tracker a list of files available or to query for a specified file.
 
@@ -45,9 +45,9 @@ Format: REQUEST <FLAG> [<FILENAME>] [<CHUNK NO>] [<IP ADDRESS>] [<PORT NO>]
 FLAG VALUES (values from 1 to 7)
 
 . Download a file from the swarm. FILENAME value must be filled. (eg. REQUEST 1 test.txt)
-. Ask the tracker for the updated list. FILENAME must be filled. (eg. REQUEST 2 test.txt)
+. Unused
 . Inform the tracker that a chunk has been successfully downloaded. FILENAME, CHUNK NO, IP ADDRESS and PORT NO must be filled.
-(eg. REQUEST 3 test.txt 1 192.168.1.2 5667)
+(eg. REQUEST 1 192.168.1.2: 5667 test.txt 1|)
 . Upload a new file. FILENAME, CHUNK NO, IP ADDRESS and PORT NO must be filled. (eg. REQUEST 4 192.168.1.2 5667 test.txt 1|test.txt 2|test.txt 3|)
 . Exit from swarm. IP ADDRESS and PORT NO must be filled. (eg. REQUEST 5 192.168.1.2 5667)
 . Query the tracker for a list of files available. (eg. REQUEST 6)
@@ -74,7 +74,7 @@ Format: RESPONSE <SPECIFIED FILE>
 
 eg. RESPONSE test.txt
 
-=== Communication between p2p client and p2p server
+=== Communication between p2p client and tracker
 
 Each P2P server will be running on TCP Port 6881.
 
@@ -91,9 +91,9 @@ will simply randomly choose **another** peer to download the same chunk.
 image::image/current.png[width="450"]
 image::image/diagram.png[width="800"]
 
-== P2P STUN server implementation due to Non-Symmetric NAT
+== P2P TURN server implementation due to Symmetric NAT
 
-For P2P connection behind a non-symmetric NAT to take place, the P2P client and server will require to communicate through a signalling server. Peers will be required to get their Public IP and port that is connected to the signalling server and update the tracker for the entries. All signal communications will be relayed through the signalling server.
+For P2P connection behind a symmetric NAT to take place, the P2P client and server will require to communicate through a signalling server. Peers will be required to get their Public IP and port that is connected to the signalling server and update the tracker for the entries. All signal communications will be relayed through the signalling server.
 
 For transferring of chunks from a P2P server to a P2P client, in addition to a signalling server, a TURN server is required to relay the chunk from the P2P server to P2P client.
 
@@ -139,6 +139,7 @@ Suppose Alice wants to get ‘example.txt’ and Bob happens to have the file:
 . Bob's P2P server establishes connection with TURN server with Alice’s TCP public IP:port
 . Bob transmit chunk over to Alice via the TURN server
 
+image::image/turn.png[width="800"]
 
 == Storage Chunking
 
