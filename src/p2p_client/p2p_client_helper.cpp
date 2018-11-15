@@ -43,9 +43,6 @@ int parse_peer_list(map<int, tracker_peer_list_entry>& peer_list, string respons
         string public_ip = entry_tokens[2];
         uint16_t port_num = (uint16_t) stoi(entry_tokens[3]);
 
-        // Testing by printing
-//        int test = stoi(entry_tokens[1]);
-//        cout << test << endl;
         cout << filename << " " << chunk_num << " " << public_ip << " " << port_num << endl;
 
         tracker_peer_list_entry entry_obj(filename, chunk_num, public_ip, port_num);
@@ -74,11 +71,6 @@ int choose_random_server(map<int, tracker_peer_list_entry>& peer_list,
         rand_num--;
     }
     tracker_peer_list_entry entry_obj = it->second;
-
-//    while (entry_obj.get_chunk_no() != missing_chunk_num) {
-//        rand_num = rand()%(max-min + 1) + min;
-//        entry_obj = peer_list[rand_num];
-//    }
 
     p2p_server_ip = entry_obj.get_public_IP();
     p2p_server_chunk_num = to_string(entry_obj.get_chunk_no());

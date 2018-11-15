@@ -13,7 +13,6 @@ using namespace std;
 
 const char CHUNK_NOT_FOUND_ERROR[] = "CHUNK NOT FOUND";
 const int MAX_BUFFER_LEN = 65546;
-const int MAX_CONNECTIONS = 10;
 
 class P2P_Server {
 private:
@@ -58,13 +57,13 @@ public:
 
     // These functions are involved p2p_server and TURN and Signaller communication
     bool setupSocketForSignallerServer();
-    void send_signaller_public_ip_port(); //"192.168.1.1:5000"
+    // send getPublic ip port request to signaller
+    void send_signaller_public_ip_port();
     // returns number of bytes read from signaller
     int read_from_signal_public_ip(char* data, int max_bytes_of_data_buffer_allocated);
     // send data to TURN to relay to dest, returns 1 if success
     int send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data, int num_bytes_of_data_to_send);
-    // an example on how to use the functions
-    //void testTURN();
+    // keep udp public port alive
     bool keep_alive_udp();
 
 };

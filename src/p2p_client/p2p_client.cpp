@@ -165,11 +165,8 @@ void p2p_client::download_file(char *tracker_port, string filename) {
     string p2p_server_chunk_num;
     string p2p_server_port_num;
     vector<bool> check_downloaded_chunks(static_cast<unsigned int>(peer_list_size + 1));
-//    for (auto i = 0; i < peer_list_size + 1; i++) {
-//        check_downloaded_chunks[i] = false;
-//    }
+
     check_downloaded_chunks[0] = NULL; // since chunk starts from #1; we will not use index 0.
-    //int retry_count = 15;
     bool complete = false;
     while (!peer_list.empty()) {
 
@@ -185,12 +182,6 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             // Testing by printing
             cout << "Connecting to: " + p2p_server_ip + ", " + p2p_server_port_num << endl;
 
-            // If the connection fails, try again...
-            // if (this->connection(p2p_server_ip.c_str(), p2p_server_port_num.c_str(),
-            //         false) == -1) {
-            //     this->ask_updated_peer_list(DEFAULT_TRACKER_PORT, filename);
-            //     continue;
-            // }
             SOCKET recv_sock;
             string TURN_public_ip = connect_to_TURN_get_public_ip(&recv_sock);
             if(TURN_public_ip == ""){
@@ -201,14 +192,6 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             str = "DOWNLOAD " + filename + " " + p2p_server_chunk_num + " " + TURN_public_ip;
             const char *buf_tcp = str.c_str();
 
-            // Connect to server.
-            // iresult = connect( connect_socket, ptr->ai_addr, (int)ptr->ai_addrlen);
-            // if (iresult == SOCKET_ERROR) {
-            //     closesocket(connect_socket);
-            //     connect_socket = INVALID_SOCKET;
-            //     continue;
-            // }
-            // iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
 
             char tosend[256];
             strcpy(tosend, str.c_str());
@@ -216,24 +199,15 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             send_to_signal_public_ip(p2p_server_ip, tosend, strlen(buf_tcp));
 
             int recvSize;
-            // recvSize = recv(connect_socket, recvbuf, MAX_BUFFER_SIZE, 0);
 
-            // TODO timeout this function
             recvSize = read_from_TURN_public_ip(&recv_sock,recvbuf, MAX_BUFFER_SIZE);
 
             cout << "Received the chunk!" << endl;
-//            string temp(recvbuf);
-//            cout << temp << endl;
-
-            // p2p_server will send me just the chunk data...
-//            Storage storage("..\\download");
 
             (this->p2p_client_storage)->saveChunk(recvbuf, sizeof(char), recvSize, filename);
 
             closesocket(recv_sock);
             memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
-//
-            //WSACleanup();
 
             check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
             // Once the chunk is downloaded, inform the tracker
@@ -286,8 +260,6 @@ void p2p_client::query_list_of_files(char *tracker_port) {
 
 void p2p_client::query_file(char *tracker_port, string filename) {
 
-//    assert(filename.length() < 256);
-
     this->connection(this->tracker_ip, tracker_port, true);
 
     string str = "REQUEST 7 " + filename;
@@ -318,11 +290,9 @@ void p2p_client::upload_file(char *tracker_port, string filename) {
         exit(EXIT_FAILURE);
     }
 
-    //string private_ip = inet_ntoa(p2p_client_private_ip);
     string public_signal_ip_port =  get_signaller_public_ip_port();
     string str = "REQUEST 4 " + public_signal_ip_port + " " + DEFAULT_P2P_SERVER_PORT + " ";
 
-    // TODO: Modify to include public IP
     for (auto chunk_no = 1; chunk_no <= num_of_chunks; chunk_no++) {
         str +=  filename + " " + to_string(chunk_no) + "|";
     }
@@ -355,7 +325,6 @@ void p2p_client::inform_tracker_downloaded_chunk(char *tracker_port, string file
 
     this->connection(this->tracker_ip, tracker_port, true);
 
-    //string private_ip = inet_ntoa(p2p_client_private_ip);
     string SIGNAL_public_ip_port = get_signaller_public_ip_port();
     string str = "REQUEST 3 " + SIGNAL_public_ip_port + " " + DEFAULT_P2P_SERVER_PORT + " " +
             filename + " " + chunk_num + "|";
@@ -431,7 +400,6 @@ int execute_user_option(p2p_client client) {
 
 bool p2p_client::linkSignalPublicIpPort(string* signal_public_ip2){
     signal_public_ip = signal_public_ip2;
-    //cout<<"My Public Ip" << *signal_public_ip << endl;
     return true;
 }
 
@@ -506,7 +474,6 @@ int p2p_client::read_from_TURN_public_ip(SOCKET* sock, char* data, int max_bytes
     int totalBytes = 1000000;
     while (bytesRead < totalBytes)
     {
-        //cout<<"readbtyes:" << bytesRead<< endl;
         result = recv(*sock, data + bytesRead, x - bytesRead,0);
         if (result < 1 )
         {
@@ -514,11 +481,9 @@ int p2p_client::read_from_TURN_public_ip(SOCKET* sock, char* data, int max_bytes
             break;
         }
         totalBytes = parseInt32(data+4) + 10;
-        //cout << "total:" << totalBytes << endl;
         bytesRead += result;
     }
 
-    // int bytes_received=recv(*sock,data,max_bytes_of_data_buffer_allocated,0);
     return bytesRead;
 }
 
@@ -528,20 +493,3 @@ int32_t p2p_client::parseInt32(char *buf) {
     return uval;
 }
 
-
-//void p2p_client::testTURN(){
-////    SOCKET temp;
-////    string mystring = connect_to_TURN_get_public_ip(&temp);
-////    cout << mystring << endl;
-////    char buff[8000];
-////    int readed = read_from_TURN_public_ip(temp,buff,8000);
-////    buff[readed] = '\0';
-////    cout << buff << endl;
-//     setupSocketForSignallerServer();
-//     string signalIP =  get_signaller_public_ip_port();
-//     cout<<signalIP<<endl;
-//     char buff[30];
-//     char tempstr[] = "hello2shoe\0";
-//     strcpy(buff,tempstr);
-//     send_to_signal_public_ip("175.156.181.183:5071",buff,10);
-//;}

@@ -9,7 +9,6 @@ void P2P_Server::stop() {
 }
 
 bool P2P_Server::start(const char *port) {
-    //testTURN();
     stop();
 
     struct addrinfo *result = nullptr, hints{};
@@ -54,20 +53,6 @@ bool P2P_Server::start(const char *port) {
 
 bool P2P_Server::listen(string& signal_public_ip) {
 
-    // variables to store client's ip address
-    // struct sockaddr_in client_addr{};
-    // int sin_size;
-    // SOCKET client_sock;
-
-    // if (::listen(listen_sock, MAX_CONNECTIONS) == SOCKET_ERROR) {
-    //     cout << "[ERROR]: " << WSAGetLastError() << " Listen sock failed\n";
-    //     closesocket(listen_sock);
-    //     WSACleanup();
-    //     return false;
-    // }
-    //cout<<"hi"<<endl;
-    //cout<< "**THIS IS THE PUBLIC SIGNAL PORT:" << get_signaller_public_ip_port() << endl << endl;
-
     thread keep_alive_thread(&P2P_Server::keep_alive_udp, this);
     keep_alive_thread.detach();
 
@@ -75,16 +60,6 @@ bool P2P_Server::listen(string& signal_public_ip) {
     cout.flush();
 
     while (true) {
-        //sin_size = sizeof(client_addr);
-
-
-        // client_sock = accept(listen_sock, (struct sockaddr *)&client_addr, &sin_size);
-        // // Don't exit, continue to listen
-        // if(client_sock == INVALID_SOCKET) {
-        //     cout << "[ERROR]: " << WSAGetLastError() << " Accept client failed\n"
-        //          << "Might have exceeded max connections allowed\n";
-        // }
-
 
         char *recv_buffer;
         recv_buffer = (char *)malloc(MAX_BUFFER_LEN);
@@ -115,19 +90,8 @@ bool P2P_Server::listen(string& signal_public_ip) {
             cout.flush();
 
         }
-
-
-        // cout << "Received a connection from:" << inet_ntoa(client_addr.sin_addr) << "\tport no: "
-        //      << ntohs(client_addr.sin_port) << "\n";
-
-
-
     }
 
-    //while(true);
-
-    WSACleanup();
-    closesocket(listen_sock);
 }
 
 bool P2P_Server::keep_alive_udp(){
@@ -135,7 +99,6 @@ bool P2P_Server::keep_alive_udp(){
         send_signaller_public_ip_port();
         Sleep(5000);
     }
-    return false;
 }
 
 
@@ -148,14 +111,7 @@ bool P2P_Server::process_request(string request) {
     char *send_buffer; //, *recv_buffer;
     int iresult, chunk_no;
 
-    //recv_buffer = (char *)malloc(MAX_BUFFER_LEN);
     send_buffer = (char *)malloc(MAX_BUFFER_LEN);
-
-    // if(recv_buffer == nullptr || send_buffer == nullptr) {
-    //     cout << "[ERROR]: " << GetLastError() << " Not enough memory to allocate to send/recv buffer\n";
-    //     closesocket(client_sock);
-    //     return false;
-    // }
 
     char req[128];
     strcpy(req,request.c_str());
@@ -186,15 +142,7 @@ bool P2P_Server::process_request(string request) {
     }
 
 
-    // iresult = shutdown(client_sock, SD_SEND);
-    // if(iresult == SOCKET_ERROR) {
-    //     cout << "[ERROR]: " << WSAGetLastError() << "\tShutdown with client failed\n";
-    //     closesocket(client_sock);
-    //     return false;
-    // }
-
     cout << "Connection with client has finished successfully" << "\n";
-    //closesocket(client_sock);
     return true;
 }
 
@@ -210,7 +158,6 @@ tuple<string, string, string> P2P_Server::parse_packet(char *recv_buffer) {
         str_token.push_back(intermediate);
     }
 
-    //assert((str_token[0] == "DOWNLOAD") == 0);
 
     return {str_token[1], str_token[2], str_token[3]};
 };
@@ -270,16 +217,12 @@ void P2P_Server::send_signaller_public_ip_port() {
 
     sendto(signal_sock, (char *)bindingReq, sizeof(bindingReq), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
-//    int recv = recvfrom(signal_sock,(char *)buf,MAXLINE, 0, nullptr, nullptr);
-//    buf[recv] = '\0';
-//    return string(buf);
 }
 
 
 
 int P2P_Server::read_from_signal_public_ip(char* data, int max_bytes_of_data_buffer_allocated){
     int bytes_recieved = recvfrom(signal_sock,data,max_bytes_of_data_buffer_allocated,0, nullptr, nullptr);
-    //cout << "help" <<data<< endl;
     return bytes_recieved;
 }
 
@@ -323,19 +266,3 @@ int P2P_Server::send_to_TURN_public_ip(string public_TURN_ip_of_dest, char* data
 
     return 1;
 }
-
-//void P2P_Server::testTURN(){
-////    setupSocketForSignallerServer();
-////    string temp = get_signaller_public_ip_port();
-////    cout<<temp<<endl;
-////    char buff[8000];
-////    int readed = read_from_signal_public_ip(buff,8000);
-////    buff[readed] = '\0';
-////    cout << buff << endl;
-//
-//     char buff[30];
-//     char tempstr[] = "hello2shoe\0";
-//     strcpy(buff,tempstr);
-//    send_to_TURN_public_ip("175.156.181.183:5021",buff,10);
-//
-//;}
