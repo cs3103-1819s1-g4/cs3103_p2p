@@ -64,7 +64,7 @@ void setupUDPserver(int param)
 
         char tempRecv_dataUDP[bytes_readUDP];
         memcpy(tempRecv_dataUDP, recv_dataUDP, bytes_readUDP);
-        tempRecv_dataUDP[bytes_readUDP] = '\0';
+        tempRecv_dataUDP[64] = '\0';
 
         //process data. Here, we just print it and Reply to Client
         printf("\n(%s , %d) said : ", inet_ntoa(client_addrUDP.sin_addr),
@@ -73,11 +73,11 @@ void setupUDPserver(int param)
         fflush(stdout);
 
         std::string str(tempRecv_dataUDP);
-        char *type = strtok(tempRecv_dataUDP, " ");
-        if (strcmp(type, "getPublic") == 0)
+        // char *type = strtok(tempRecv_dataUDP, " ");
+        if (strncmp(tempRecv_dataUDP, "getPublic",9)== 0)
         {
             // get sendback public ip:port
-            strcpy(reply_dataUDP, "");
+            strcpy(reply_dataUDP, "yourIP");
             char ipAddUDP[50];
             char portNumUDP[50];
             sprintf(ipAddUDP, "%s", inet_ntoa(client_addrUDP.sin_addr));
@@ -197,19 +197,24 @@ int getSockFromIP(std::string ipPort)
 
 void relayTCPconnection(int fromSockFd, int toSockFd)
 {
-    char buffer[8192];
-    int count;
+    char buffer[65556];
     //std::cout<< "start relaying" << std::endl;
-    // while ((count = recv(fromSockFd, buffer, sizeof(buffer), 0)) > 0)
-    // {
-    //     //std::cout<< "hmm" << std::endl;
-    //     send(toSockFd, buffer, count, 0);
-    // }
-    count = recv(fromSockFd, buffer, sizeof(buffer), 0);
-    send(toSockFd, buffer, count, 0);
-    char send_data[1024];
-    strcpy(send_data, "200 OK successfully sent data!");
-    send(fromSockFd, send_data, strlen(send_data), 0);
+    int bytesRead = 0;
+    int result;
+    int x = 65556;
+    while (bytesRead < x)
+    {
+        result = recv(fromSockFd, buffer + bytesRead, x - bytesRead,0);
+        if (result < 1 )
+        {
+            // Throw your error.
+            break;
+        }
+
+        bytesRead += result;
+    }
+    send(toSockFd, buffer, bytesRead, 0);
+    close(toSockFd);
     std::cout << "done relaying" << std::endl;
 }
 
@@ -248,8 +253,7 @@ void setupConnectionForTCP(int connectedSocketFd, sockaddr_in client_addr)
         tempRecv_data[bytes_recieved] = '\0';
         std::string str(tempRecv_data);
 
-        char *typeOrIp = strtok(tempRecv_data, " ");
-        if (strcmp(typeOrIp, "getPublic") == 0)
+        if (strncmp(tempRecv_data, "getPublic",9) == 0)
         {
             // get sendback public ip:port
             strcpy(reply, "");
@@ -265,17 +269,18 @@ void setupConnectionForTCP(int connectedSocketFd, sockaddr_in client_addr)
         else if (str.find(':') == std::string::npos || str.find(':') == 0 || ':' == str.back())
         {
             char send_data[1024];
-            strcpy(send_data, "404 Not found Please Send ip:port again");
+            strcpy(send_data, "404 Not found Please Send ip:port again1");
             send(connectedSocketFd, send_data, strlen(send_data), 0);
         }
         else
         {
             char dest[1024];
+            // char *typeOrIp = strtok(tempRecv_data, " ");
             strcpy(dest, tempRecv_data);
             std::string str(dest);
             if (str.find(':') == std::string::npos || str.find(':') == 0 || ':' == str.back()) {
                 char send_data[1024];
-                strcpy(send_data, "404 Not found Please Send ip:port again");
+                strcpy(send_data, "404 Not found Please Send ip:port again2");
                 send(connectedSocketFd, send_data, strlen(send_data), 0);
                 continue;
             }
@@ -285,14 +290,19 @@ void setupConnectionForTCP(int connectedSocketFd, sockaddr_in client_addr)
             strcpy(destIP, token);
             token = strtok(NULL, ":");
             strcpy(destPort, token);
-
+            std::string desStrIP(destIP);
+            std::string desStrPort(destPort);
             //std::cout<< getSockFromIP(typeOrIp) << std::endl;
-            printf("%s\n\n", tempRecv_data);
-            int toSendSockFd = getSockFromIP(tempRecv_data);
-            if (toSendSockFd == -1 && toSendSockFd != connectedSocketFd)
+            std::string ipport = "";
+            ipport.append(desStrIP);
+            ipport.append(":");
+            ipport.append(desStrPort);
+            int toSendSockFd = getSockFromIP(ipport);
+            printf("%d\n\n", toSendSockFd);
+            if (toSendSockFd == -1 || toSendSockFd == connectedSocketFd)
             {
                 char send_data[1024];
-                strcpy(send_data, "404 Not found Please Send ip:port again");
+                strcpy(send_data, "404 Not found Please Send ip:port again3");
                 send(connectedSocketFd, send_data, strlen(send_data), 0);
             }
             else
@@ -322,7 +332,7 @@ void waitForConnection(unsigned int sin_size, int connected, int sock, sockaddr_
            inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
     std::string ipPort = inet_ntoa(client_addr.sin_addr);
     ipPort.append(":");
-    ipPort += std::to_string(ntohs(client_addr.sin_port));
+    ipPort.append(std::to_string(ntohs(client_addr.sin_port)));
     //std::cout << ipPort << std::endl;
     threadMutex.lock();
     connectionThreads.insert(std::pair<std::string, std::thread>(ipPort, std::thread(setupConnectionForTCP, connected, client_addr)));
