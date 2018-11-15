@@ -104,7 +104,6 @@ void tracker::listen() {
                 //Exit from swarm. IP ADDRESS must be filled.
             case 5:
                 reply = deleteIP(message);
-                printf("Deleting IP from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
                 break;
                 //Query the tracker for a list of files available.
             case 6:
@@ -255,12 +254,35 @@ string tracker::deleteIP(string message){
 //            ++iter;
 //        }
 //    }
+    char * ptr = NULL;
+    char *cstr = new char[message.length() + 1];
+    strcpy(cstr,message.c_str());
+    ptr = strtok(cstr," ");
+    ptr = strtok(nullptr," ");
+    ptr = strtok(nullptr," ");
+    string public_IP(ptr);
+    printf("Deleting Entries from %s\n",public_IP.c_str());
     peer_list.erase(
             remove_if(peer_list.begin(),
                     peer_list.end(),
-                    [](tracker_peer_list_entry* const & t) {return t->get_public_IP() == inet_ntoa(si_other.sin_addr);}
+                    [&public_IP](tracker_peer_list_entry* const & t) {return t->get_public_IP() == public_IP;}
             ),
             peer_list.end()
             );
+    file_list.clear();
+    for (auto &i: peer_list) {
+        bool exist = false;
+        for (auto &j: file_list) {
+            if (i->get_file_name() == j->get_file_name()) {
+                exist = true;
+                break;
+            }
+        }
+        if(!exist){
+            file_list.emplace_back(
+                    new tracker_file_list_entry(i->get_file_name()));
+        }
+    }
+    
     return "";
 }
