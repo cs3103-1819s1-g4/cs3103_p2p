@@ -90,23 +90,38 @@ image::image/diagram.png[width="800"]
 
 == P2P STUN server implementation due to Non-Symmetric NAT
 
-For P2P connection behind a non-symmetric NAT to take place, the P2P client and server will require each others Public IP and Port assigned by the NAT. The peers will be required to get their Public IP and port via a STUN server.
+For P2P connection behind a non-symmetric NAT to take place, the P2P client and server will require to communicate through a signalling server. The peers will be required to get their Public IP and port that is connected to the signalling server and update the tracker for the entries. All signal communications will be relayed through the signalling server.
 
-The P2P peer will send a request from port 6881 to any Public STUN (RFC5389) server requesting for their public IP addresse and Port numbers.
+A TURN server will be used to relay the chunk over to the p2p client from the p2p server.
 
-=== Getting Public IP and Port number
+==== Signaller request format
 
-The P2P will contact the STUN server in the following scenarios:
+----
+Format: getPublic
+----
+
+----
+Format: <Singalling Public IP:PORT of destination> <Request message>
+----
+
+==== TURN request format
+
+----
+Format: getPublic
+----
+
+----
+Format: <TURN Public IP:PORT of destination> <Chunk>
+----
 
 ==== Download and Upload of file
 
-When the P2P wants to download and upload a file, the P2P will send a request to the STUN server for its Public IP and Port number after that it will proceed to download and upload the file and update the tracker.
+When the P2P wants to download and upload a file, the P2P client will send a request to the P2P server via the signalling server sending over its public IP port address that is connected to the TURN server. Once the P2P server gets this request, it will send the chunk to the TURN server specifying the public IP port address of the P2P client that the P2P server wants to send the chunk to. The chunk will then be relayed to the client via the TURN server.
 
 ==== Periodically check Public IP and Port number
-P2P server will periodically send a request to STUN server at a 10 second interval to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested and saved Public IP and Port number, it will update the tracker by sending its new public IP and Port Number.
+P2P server will periodically send a request to Signaling server at a 5 second interval to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested and saved Public IP and Port number, it will update the tracker by sending its new public IP and Port Number. This is to ensure that the P2P clients and servers are able to communicate to each other via the signalling server.
 
 ==== Example
-image::https://i.imgur.com/xnZcM9e.png[STUN implement]
 
 == Storage Chunking
 
