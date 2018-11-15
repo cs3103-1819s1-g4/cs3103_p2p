@@ -232,7 +232,7 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
             closesocket(recv_sock);
             memset(recvbuf, '\0', MAX_BUFFER_SIZE); // clears recvbuf
-//            peer_list.clear(); // clears peer_list
+//
             //WSACleanup();
 
             check_downloaded_chunks[stoi(p2p_server_chunk_num)] = true;
@@ -242,6 +242,7 @@ void p2p_client::download_file(char *tracker_port, string filename) {
 
         if((this->p2p_client_storage)->getFinalChunkNumber(filename) != -1)
         {
+            peer_list.clear(); // clears peer_list
             complete = true;
             break;
         }
@@ -356,9 +357,8 @@ void p2p_client::inform_tracker_downloaded_chunk(char *tracker_port, string file
 
     //string private_ip = inet_ntoa(p2p_client_private_ip);
     string SIGNAL_public_ip_port = get_signaller_public_ip_port();
-    string str = "REQUEST 3 " + filename + " " + chunk_num + " " + SIGNAL_public_ip_port + " " +
-            DEFAULT_P2P_SERVER_PORT;
-
+    string str = "REQUEST 3 " + SIGNAL_public_ip_port + " " + DEFAULT_P2P_SERVER_PORT + " " +
+            filename + " " + chunk_num + "|";
     const char *buf = str.c_str();
     sendto(connect_socket, buf, strlen(buf), 0, ptr->ai_addr, ptr->ai_addrlen);
 
