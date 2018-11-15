@@ -11,7 +11,7 @@
 #include "p2p_client_helper.h"
 #include <map>
 
-#define MAX_BUFFER_SIZE 65536
+#define MAX_BUFFER_SIZE 65546
 #undef max
 
 using namespace std;
@@ -210,7 +210,7 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             // }
             // iresult = send(connect_socket, buf_tcp, strlen(buf_tcp), 0);
 
-            char tosend[128];
+            char tosend[256];
             strcpy(tosend, str.c_str());
 
             send_to_signal_public_ip(p2p_server_ip, tosend, strlen(buf_tcp));
@@ -222,8 +222,8 @@ void p2p_client::download_file(char *tracker_port, string filename) {
             recvSize = read_from_TURN_public_ip(&recv_sock,recvbuf, MAX_BUFFER_SIZE);
 
             cout << "Received the chunk!" << endl;
-            string temp(recvbuf);
-            cout << temp << endl;
+//            string temp(recvbuf);
+//            cout << temp << endl;
 
             // p2p_server will send me just the chunk data...
 //            Storage storage("..\\download");
@@ -503,7 +503,7 @@ int p2p_client::read_from_TURN_public_ip(SOCKET* sock, char* data, int max_bytes
     int x = max_bytes_of_data_buffer_allocated;
     int bytesRead = 0;
     int result;
-    int totalBytes = 10000;
+    int totalBytes = 1000000;
     while (bytesRead < totalBytes)
     {
         //cout<<"readbtyes:" << bytesRead<< endl;

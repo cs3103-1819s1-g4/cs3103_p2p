@@ -12,7 +12,7 @@
 using namespace std;
 
 const char CHUNK_NOT_FOUND_ERROR[] = "CHUNK NOT FOUND";
-const int MAX_BUFFER_LEN = 65536;
+const int MAX_BUFFER_LEN = 65546;
 const int MAX_CONNECTIONS = 10;
 
 class P2P_Server {
