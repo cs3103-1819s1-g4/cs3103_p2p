@@ -39,7 +39,7 @@ int parse_peer_list(map<int, tracker_peer_list_entry>& peer_list, string respons
             entry_tokens.push_back(entry_token);
         }
         string filename = entry_tokens[0];
-        uint8_t chunk_num = (uint8_t) stoi(entry_tokens[1]);
+        uint16_t chunk_num = (uint16_t) stoi(entry_tokens[1]);
         string public_ip = entry_tokens[2];
         uint16_t port_num = (uint16_t) stoi(entry_tokens[3]);
 

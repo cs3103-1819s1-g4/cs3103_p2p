@@ -26,7 +26,7 @@ public:
      * @param public_IP
      * @param port_no
      */
-    tracker_peer_list_entry(string file_name, uint8_t chunk_no,string public_IP, uint16_t port_no) {
+    tracker_peer_list_entry(string file_name, uint16_t chunk_no,string public_IP, uint16_t port_no) {
 
         try {
             this->file_name = file_name;
