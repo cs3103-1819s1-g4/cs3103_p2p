@@ -13,7 +13,7 @@ class tracker_peer_list_entry {
 private:
 
     string file_name;
-    uint8_t chunk_no;
+    uint16_t chunk_no;
     string public_IP;
     uint16_t port_no;
 
@@ -104,7 +104,7 @@ public:
 
     string get_file_name();
 
-    uint8_t get_chunk_no();
+    uint16_t get_chunk_no();
 
     string get_public_IP();
 
