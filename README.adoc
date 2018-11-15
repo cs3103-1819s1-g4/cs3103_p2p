@@ -2,13 +2,14 @@
 
 == Instructions to run code
 
-Our source code is Windows-dependent, and thus could only run on Windows. We used Windows 10.
+The project's source code is written using in a Windows environment, specifically Windows 10. The
+compiler used for our project is the Microsoft Visual C++ compiler.
 
-Recommended way to compile the code is to first install CLion https://www.jetbrains.com/clion/download/#section=windows[here].
+Recommended way to compile the code is to first install CLion https://www.jetbrains.com/clion/download/#section=windows[here]. Alternatively, you can use Microsoft Visual Studio to build the solution using the files provided. However, the solution is not provided in this project.
 
-Next, install Visual Studio Community https://visualstudio.microsoft.com/downloads/[here], if you have not.
+Next, install Visual Studio Community https://visualstudio.microsoft.com/downloads/[here] for the use of the compiler.
 
-After which, you can then load the source code into CLion and build it. Run p2p_client.exe. (Should we only include the executable file in the submissions, just in case?)
+After which, you can then load the source code into CLion and build it. Then, run p2p_client.exe to start the client application.
 
 Tracker's IP address is given as 18.136.125.209.
 
@@ -20,10 +21,11 @@ The centralised server (tracker) will be running on UDP Port 80.
 
 It will contain a list, where each entry will be in the form _(filename, chunk_num, public_IP, port_num)_.
 
-Suppose Harry wants to download a file _test.txt_, he will send the tracker a request. The tracker will respond to Harry a list of entries, where _filename_ is equal
-to _test.txt_.
+Suppose Harry wants to download a file _test.txt_, he will send the tracker a request. The tracker will respond to Harry a list of entries,
+where _filename_ is equal to _test.txt_.
 
-For every chunk Harry has successfully downloaded, he will inform the tracker and the tracker will
+For our P2P application, if one wants to download a file, he or she will have to participate in the swarm involuntarily.
+Thus, for every chunk Harry has successfully downloaded, he will inform the tracker and the tracker will
 update its list to include _(test.txt, chunk_no, Harry's Public_IP, port_num)_.
 
 Suppose Harry wants to exit from the swarm, he will inform the tracker and the tracker will delete the entries corresponding
@@ -58,6 +60,7 @@ Format: RESPONSE <LIST OF ENTRIES>
 ----
 
 eg. RESPONSE test.txt 1 192.168.1.5 6881|test.txt 2 192.168.1.6 6881|
+Note that each entry is seperated with a '|'.
 
 ----
 Format: RESPONSE <LIST OF FILES>
@@ -82,7 +85,7 @@ At the start, he will simply choose a random chunk from a random peer to downloa
 Next, he will choose which chunks he does not have yet and from these chunks, randomly download one from a random peer.
 
 There is a possibility that the chunk download from a peer will fail (eg. when the other peer exits). In this case, Harry
-will (a) ask the tracker for the new updated list and (b) randomly choose **another** peer to download the same chunk.
+will simply randomly choose **another** peer to download the same chunk.
 
 === Examples
 image::image/current.png[width="450"]
@@ -90,9 +93,9 @@ image::image/diagram.png[width="800"]
 
 == P2P STUN server implementation due to Non-Symmetric NAT
 
-For P2P connection behind a non-symmetric NAT to take place, the P2P client and server will require to communicate through a signalling server. The peers will be required to get their Public IP and port that is connected to the signalling server and update the tracker for the entries. All signal communications will be relayed through the signalling server.
+For P2P connection behind a non-symmetric NAT to take place, the P2P client and server will require to communicate through a signalling server. Peers will be required to get their Public IP and port that is connected to the signalling server and update the tracker for the entries. All signal communications will be relayed through the signalling server.
 
-A TURN server will be used to relay the chunk over to the p2p client from the p2p server.
+For transferring of chunks from a P2P server to a P2P client, in addition to a signalling server, a TURN server is required to relay the chunk from the P2P server to P2P client.
 
 ==== Signaller request format
 
@@ -101,7 +104,7 @@ Format: getPublic
 ----
 
 ----
-Format: <Singalling Public IP:PORT of destination> <Request message>
+Format: <Signalling Public IP:PORT of destination> <Request message>
 ----
 
 ==== TURN request format
@@ -114,14 +117,27 @@ Format: getPublic
 Format: <TURN Public IP:PORT of destination> <Chunk>
 ----
 
-==== Download and Upload of file
-
-When the P2P wants to download and upload a file, the P2P client will send a request to the P2P server via the signalling server sending over its public IP port address that is connected to the TURN server. Once the P2P server gets this request, it will send the chunk to the TURN server specifying the public IP port address of the P2P client that the P2P server wants to send the chunk to. The chunk will then be relayed to the client via the TURN server.
-
 ==== Periodically check Public IP and Port number
-P2P server will periodically send a request to Signaling server at a 5 second interval to get its Public IP and Port Number. If the recieved Public IP and Port number is different from the previously requested and saved Public IP and Port number, it will update the tracker by sending its new public IP and Port Number. This is to ensure that the P2P clients and servers are able to communicate to each other via the signalling server.
+All P2P server will periodically send a request to the signaling server at a 5 second interval to get its Public IP and Port Number. This
+technique is known as 'UDP hole punching' to maintain the port state of the P2P server at the NAT router. If the received Public IP and Port number is different from the previously
+requested and saved Public IP and Port number, it will update the tracker by sending its new public IP and Port Number. This is to ensure that the P2P clients and servers are able to communicate to each other via the signalling server.
 
-==== Example
+==== Downloading a file
+
+When a P2P client wants to download a file, the P2P client will send a request, containing its public IP port address that
+it is connected to the TURN server, to the signalling server which will relay the request to the intended P2P server.
+Once the P2P server receives the request, it will send the chunk to the TURN server specifying the public IP port address
+of the P2P client that the P2P server wants to send the chunk to. The chunk will then be relayed to the client via the TURN server.
+
+=== Example
+Suppose Alice wants to get ‘example.txt’ and Bob happens to have the file:
+. Alice requests list of peers from tracker who has the file 'example.txt' (The list should contain Bob UDP public IP:port)
+. Alice establish TCP connection with relay server with TURN server 18.136.118.72:6882 and receives her public TCP IP:port
+. Alice sends <Bob’s p2p_server UDP public IP:port> <Alice’s TCP public IP:port> <P2P protocol details> to the signal server
+. Signal server transmit the message to Bob's P2P server
+. Bob's P2P server establishes connection with TURN server with Alice’s TCP public IP:port
+. Bob transmit chunk over to Alice via the TURN server
+
 
 == Storage Chunking
 
